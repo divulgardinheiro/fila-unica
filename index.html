@@ -140,10 +140,12 @@
   details.concluidas summary{font-size:.82rem;color:var(--ink-faint);cursor:pointer}
   .lembretes{display:flex;flex-direction:column;gap:6px;margin-bottom:1.6rem}
   .lembrete{
-    display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:baseline;
+    display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:baseline;
     background:var(--card);border:1px solid var(--line);border-left:3px solid var(--amber);
     border-radius:8px;padding:.45rem .7rem;font-size:.8rem;color:var(--ink-soft);
   }
+  .lembrete.feito{opacity:.55;border-left-color:var(--line)}
+  .lembrete.feito .texto{text-decoration:line-through}
   .lembrete .quando{font-weight:700;color:var(--amber);white-space:nowrap;font-variant-numeric:tabular-nums}
   dialog#popup{
     max-width:720px;width:92vw;border:1px solid var(--line);border-radius:12px;
@@ -156,6 +158,19 @@
     background:var(--paper);border:1px solid var(--line);border-radius:8px;
     padding:1rem;max-height:60vh;overflow:auto;margin:0 0 1rem;
   }
+  .popup-checklist{max-height:60vh;overflow:auto;margin:0 0 1rem}
+  .popup-regra{font-size:.82rem;color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);
+    border-radius:8px;padding:.6rem .8rem;margin:0 0 .7rem}
+  .popup-progresso{font-size:.76rem;color:var(--ink-faint);margin:0 0 .8rem}
+  .popup-grupo{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--ink-faint);margin:1rem 0 .4rem}
+  .popup-grupo:first-child{margin-top:0}
+  .popup-item{display:flex;align-items:flex-start;gap:8px;padding:.35rem 0;font-size:.87rem;
+    border-bottom:1px solid var(--line)}
+  .popup-item:last-child{border-bottom:none}
+  .popup-item.feito{opacity:.55}
+  .popup-item.feito span{text-decoration:line-through}
+  .popup-item .q-done{flex-shrink:0;margin-top:1px}
   dialog#popup .pop-btns{display:flex;gap:10px;justify-content:flex-end}
   dialog#popup button{
     font:inherit;font-size:.8rem;padding:6px 14px;border-radius:8px;cursor:pointer;
@@ -271,6 +286,10 @@
 <section id="lembretesSection" hidden>
   <h2>Lembretes</h2>
   <div class="lembretes" id="lembretesList"></div>
+  <details class="concluidas" id="lembretesConcluidosBox" hidden>
+    <summary id="lembretesConcluidosSummary">Concluidos</summary>
+    <div class="lembretes" id="lembretesConcluidosList" style="margin-top:.5rem"></div>
+  </details>
 </section>
 <section id="filaSection">
   <h2>Fila de trabalho <span class="count" id="filaCount"></span></h2>
@@ -388,6 +407,7 @@
 <dialog id="popup">
   <h3 id="popupTitulo"></h3>
   <pre id="popupCorpo"></pre>
+  <div id="popupChecklist" class="popup-checklist" hidden></div>
   <div class="pop-btns">
     <button type="button" class="primario" id="popupCopiar">Copiar texto</button>
     <button type="button" id="popupFechar">Fechar</button>
@@ -520,7 +540,7 @@ function renderFila(data, itens){
       ? esc(it.titulo) + (it.prazo ? " &middot; prazo " + fmtPrazo(it.prazo) : "")
       : (it.tarefa === "Analisar" ? "Triagem: abrir e identificar do que se trata" : "");
     if(it.detalhe){
-      const idx = DETALHES.push(it.detalhe) - 1;
+      const idx = DETALHES.push(Object.assign({_key: chaveDe(it)}, it.detalhe)) - 1;
       desc += ` &middot; <button type="button" class="link-det" data-det="${idx}">${esc(it.detalhe.titulo || "abrir detalhe")} &#8599;</button>`;
     }
     const key = chaveDe(it);
@@ -550,12 +570,27 @@ function renderLembretes(data){
   const sec = document.getElementById("lembretesSection");
   const ls = data.lembretes || [];
   sec.hidden = ls.length === 0;
+  const done = doneLocais();
   const ordenados = [...ls].sort((a,b) => (a.data||"").localeCompare(b.data||""));
-  document.getElementById("lembretesList").innerHTML = ordenados.map(l => {
+  function linha(l, concluido){
     const d = diasAte(l.data);
     const rot = d === null ? "" : d < 0 ? "passou" : d === 0 ? "HOJE" : d === 1 ? "amanha" : "em " + d + " dias";
-    return `<div class="lembrete"><span class="quando">${fmtPrazo(l.data)}${rot ? " (" + rot + ")" : ""}</span><span>${esc(l.texto)}</span></div>`;
-  }).join("");
+    const key = "Lembrete|" + (l.id || l.data + "|" + l.texto);
+    return `<div class="lembrete${concluido ? " feito" : ""}">
+      <span class="quando">${fmtPrazo(l.data)}${rot ? " (" + rot + ")" : ""}</span>
+      <span class="texto">${esc(l.texto)}</span>
+      <button type="button" class="q-done" data-lembretekey="${esc(key)}" title="${concluido ? "Reabrir" : "Marcar como resolvido (local; avise o Claude para registrar)"}">${concluido ? "&#8634;" : "&#10003;"}</button>
+    </div>`;
+  }
+  const ativos = ordenados.filter(l => !done["Lembrete|" + (l.id || l.data + "|" + l.texto)]);
+  const concluidos = ordenados.filter(l => done["Lembrete|" + (l.id || l.data + "|" + l.texto)]);
+  document.getElementById("lembretesList").innerHTML = ativos.map(l => linha(l, false)).join("");
+  const box = document.getElementById("lembretesConcluidosBox");
+  box.hidden = concluidos.length === 0;
+  document.getElementById("lembretesConcluidosSummary").textContent = "Concluidos (" + concluidos.length + ")";
+  document.getElementById("lembretesConcluidosList").innerHTML = concluidos.map(l => linha(l, true)).join("");
+  sec.querySelectorAll("button[data-lembretekey]").forEach(b =>
+    b.addEventListener("click", () => alternarDone(b.dataset.lembretekey)));
 }
 
 // ---- secao SEI --------------------------------------------------------
@@ -609,7 +644,7 @@ function renderSei(data, fila){
       info += `<div class="analise-det">${a.resumo ? esc(a.resumo) : ""}${a.outrasVaras ? "<br><b>Outras varas:</b> " + esc(a.outrasVaras) : ""}${a.acao ? "<br><b>Proxima acao:</b> " + esc(a.acao) : ""}</div>`;
     }
     if(p.minuta){
-      const idx = DETALHES.push(p.minuta) - 1;
+      const idx = DETALHES.push(Object.assign({_key: "SEI|" + p.numero}, p.minuta)) - 1;
       info += `<div style="margin-top:.3rem"><button type="button" class="link-det" data-det="${idx}">Abrir minuta do expediente &#8599;</button></div>`;
     }
     const fp = pos.get("SEI|" + p.numero);
@@ -915,11 +950,48 @@ function alternarDone(key){
   try { localStorage.setItem("fu-done", JSON.stringify(m)); } catch(e){}
   if(ultimoData) render(ultimoData);
 }
+function renderPopupChecklist(idx){
+  const det = DETALHES[idx];
+  const done = doneLocais();
+  let total = 0, feitos = 0;
+  const corpo = (det.checklist || []).map((g, gi) => {
+    const itens = (g.itens || []).map((it, ii) => {
+      total++;
+      const key = "PopupCk|" + det._key + "|" + gi + "|" + ii;
+      const marcado = !!done[key];
+      if(marcado) feitos++;
+      return `<div class="popup-item${marcado ? " feito" : ""}">
+        <button type="button" class="q-done" data-popupck="${esc(key)}" data-idx="${idx}" title="${marcado ? "Desfazer" : "Marcar como feito"}">${marcado ? "&#10003;" : "&#9675;"}</button>
+        <span>${esc(it.texto)}</span>
+      </div>`;
+    }).join("");
+    return `<div class="popup-grupo">${esc(g.grupo)}</div>${itens}`;
+  }).join("");
+  const el = document.getElementById("popupChecklist");
+  el.innerHTML =
+    (det.regra ? `<p class="popup-regra">${esc(det.regra)}</p>` : "") +
+    `<p class="popup-progresso">${feitos}/${total} concluidos (marcacao local no seu navegador)</p>` + corpo;
+  el.querySelectorAll("button[data-popupck]").forEach(b => b.addEventListener("click", () => {
+    const m = doneLocais();
+    const k = b.dataset.popupck;
+    if(m[k]) delete m[k]; else m[k] = Date.now();
+    try { localStorage.setItem("fu-done", JSON.stringify(m)); } catch(e){}
+    renderPopupChecklist(+b.dataset.idx);
+  }));
+}
 function abrirPopup(idx){
   const det = DETALHES[idx];
   if(!det) return;
   document.getElementById("popupTitulo").textContent = det.titulo || "";
-  document.getElementById("popupCorpo").textContent = det.corpo || "";
+  const temChecklist = Array.isArray(det.checklist) && det.checklist.length > 0;
+  document.getElementById("popupCorpo").hidden = temChecklist;
+  document.getElementById("popupChecklist").hidden = !temChecklist;
+  document.getElementById("popupCopiar").hidden = temChecklist;
+  if(temChecklist){
+    renderPopupChecklist(idx);
+  } else {
+    document.getElementById("popupCorpo").textContent = det.corpo || "";
+  }
   document.getElementById("popup").showModal();
 }
 let panelAtivo = null;
