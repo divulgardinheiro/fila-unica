@@ -790,8 +790,14 @@ async function derivarChave(senha, salt, iters){
     base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
 }
 function renderPrivadoConteudo(dados){
+  const ordenados = (dados.itens || []).slice().sort((a, b) => {
+    const da = a.prazo ? diasAte(a.prazo) : 9999, db = b.prazo ? diasAte(b.prazo) : 9999;
+    if(da !== db) return da - db;
+    const pa = a.prioridade === "alta" ? 0 : 1, pb = b.prioridade === "alta" ? 0 : 1;
+    return pa - pb;
+  });
   const cats = {};
-  (dados.itens || []).forEach(it => { (cats[it.cat || "Geral"] = cats[it.cat || "Geral"] || []).push(it); });
+  ordenados.forEach(it => { (cats[it.cat || "Geral"] = cats[it.cat || "Geral"] || []).push(it); });
   const done = doneLocais();
   let html = "";
   for(const cat of Object.keys(cats)){
@@ -800,8 +806,14 @@ function renderPrivadoConteudo(dados){
       const key = "priv|" + it.texto;
       const risco = done[key] ? "text-decoration:line-through;opacity:.55" : "";
       const chip = it.prioridade === "alta" ? ' <span class="chip chip-alta">alta</span>' : "";
+      let prazoChip = "";
+      if(it.prazo){
+        const d = diasAte(it.prazo);
+        const rot = d < 0 ? "atrasado" : d === 0 ? "hoje" : d === 1 ? "amanhã" : fmtPrazo(it.prazo);
+        prazoChip = ` <span class="chip ${d <= 1 ? "chip-urgente" : "chip-neutra"}">${esc(rot)}</span>`;
+      }
       return `<div class="q-row" style="grid-template-columns:1fr auto">
-        <div class="q-main"><div class="q-ref" style="font-weight:500;${risco}">${esc(it.texto)}${chip}</div></div>
+        <div class="q-main"><div class="q-ref" style="font-weight:500;${risco}">${esc(it.texto)}${chip}${prazoChip}</div></div>
         <button type="button" class="q-done" data-privkey="${esc(key)}" title="${done[key] ? "Desfazer" : "Marcar como feito (local)"}">${done[key] ? "&#8634;" : "&#10003;"}</button>
       </div>`;
     }).join("");
