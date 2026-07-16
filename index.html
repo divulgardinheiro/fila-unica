@@ -81,11 +81,17 @@
   .origem-tabs{display:flex;gap:8px;margin-bottom:1.6rem;flex-wrap:wrap}
   .origem-tab{
     font:inherit;font-size:.78rem;padding:4px 12px;border-radius:999px;cursor:pointer;
-    background:var(--card);border:1px solid var(--line);color:var(--ink-soft);
+    background:var(--card);border:2px solid var(--line);color:var(--ink-soft);
   }
   .origem-tab:hover{border-color:var(--blue);color:var(--blue)}
-  .origem-tab.active{background:var(--blue-soft);border-color:var(--blue);color:var(--blue);font-weight:700}
+  .origem-tab.active{box-shadow:0 0 0 2px var(--blue);font-weight:700}
   .origem-tab:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  /* mesma escala didatica dos chips de prazo, so que preenchendo o botao inteiro */
+  .origem-tab.tab-vencido{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+  .origem-tab.tab-critico{background:var(--red-soft);border-color:var(--red);color:var(--red);font-weight:700}
+  .origem-tab.tab-alerta{background:var(--amber-soft);border-color:var(--amber);color:var(--amber);font-weight:700}
+  .origem-tab.tab-moderado{background:var(--violet-soft);border-color:var(--violet);color:var(--violet);font-weight:700}
+  .origem-tab.tab-tranquilo{background:var(--teal-soft);border-color:var(--teal);color:var(--teal);font-weight:700}
   .panel-hint{font-size:.8rem;color:var(--ink-faint);margin:.2rem 0 1rem}
   .trabalho-bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between;
     background:var(--note-bg);border:1px solid var(--note-border);color:var(--note-ink);
@@ -136,11 +142,6 @@
   .chip-alerta{background:var(--amber-soft);color:var(--amber)}
   .chip-moderado{background:var(--violet-soft);color:var(--violet)}
   .chip-tranquilo{background:var(--teal-soft);color:var(--teal)}
-  .dot-vencido{background:var(--red);box-shadow:0 0 0 2px var(--red-soft)}
-  .dot-critico{background:var(--red)}
-  .dot-alerta{background:var(--amber)}
-  .dot-moderado{background:var(--violet)}
-  .dot-tranquilo{background:var(--teal)}
   .lembrete.lem-vencido{border-left-color:var(--red)}
   .lembrete.lem-critico{border-left-color:var(--red)}
   .lembrete.lem-alerta{border-left-color:var(--amber)}
@@ -938,14 +939,25 @@ async function destrancarPrivado(senha){
   atualizarDotAbaPrivado();
   try { sessionStorage.setItem("fu-priv", senha); } catch(_){}
 }
-// atualiza so o dot da aba Privado (sem recriar o botao, para nao perder o listener de clique)
+const TAB_BANDAS = ["tab-vencido", "tab-critico", "tab-alerta", "tab-moderado", "tab-tranquilo"];
+// pinta o botao inteiro da aba com a mesma escala didatica dos chips de prazo
+function aplicarBandaTab(btn, label, info){
+  btn.classList.remove(...TAB_BANDAS);
+  if(info){
+    btn.classList.add(info.cls.replace("chip-", "tab-"));
+    btn.title = "prazo mais proximo nesta origem: " + info.data + " (" + info.label + ")";
+    btn.textContent = label + " - " + info.label;
+  } else {
+    btn.removeAttribute("title");
+    btn.textContent = label;
+  }
+}
+// atualiza so a aba Privado (sem recriar o botao, para nao perder o listener de clique)
 function atualizarDotAbaPrivado(){
   const btn = document.querySelector('#origemTabs .origem-tab[data-panel="privado"]');
   if(!btn || !privadoDados) return;
   const label = btn.dataset.label || btn.textContent;
-  const info = piorPrazo(privadoDados.itens || []);
-  const dot = info ? `<i class="dot dot-${info.cls.replace("chip-", "")}" title="prazo mais proximo: ${esc(info.data)} (${esc(info.label)})"></i> ` : "";
-  btn.innerHTML = dot + esc(label);
+  aplicarBandaTab(btn, label, piorPrazo(privadoDados.itens || []));
 }
 function wirePrivado(){
   const btn = document.getElementById("privadoUnlock");
@@ -1096,8 +1108,10 @@ function renderOrigemTabs(data, fila){
     const key = panelKeyDe(o.nome);
     const label = o.nome + ": " + o.status;
     const info = key ? dotPrazoOrigem(key, fila) : null;
-    const dot = info ? `<i class="dot dot-${info.cls.replace("chip-", "")}" title="prazo mais proximo: ${esc(info.data)} (${esc(info.label)})"></i> ` : "";
-    return `<button type="button" class="origem-tab" data-panel="${key ?? ""}" data-label="${esc(label)}">${dot}${esc(label)}</button>`;
+    const banda = info ? " " + info.cls.replace("chip-", "tab-") : "";
+    const texto = info ? label + " - " + info.label : label;
+    const titleAttr = info ? ` title="prazo mais proximo nesta origem: ${esc(info.data)} (${esc(info.label)})"` : "";
+    return `<button type="button" class="origem-tab${banda}" data-panel="${key ?? ""}" data-label="${esc(label)}"${titleAttr}>${esc(texto)}</button>`;
   }).join("");
 }
 function render(data){
