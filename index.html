@@ -127,6 +127,9 @@
   .chip-aguardando{background:transparent;border:1px dashed var(--line);color:var(--ink-faint)}
   .chip-ok{background:var(--teal-soft);color:var(--teal)}
   .chip-zero{background:var(--red);color:#fff}
+  .q-row.zero{border:2px solid var(--red);background:var(--red-soft)}
+  .q-row.zero .q-ref{font-size:1.05rem;font-weight:800;text-transform:uppercase;color:var(--red);letter-spacing:.01em}
+  .q-row.zero .q-desc{font-weight:600}
   .q-actions{display:flex;align-items:center;gap:6px}
   .q-done{
     width:22px;height:22px;border-radius:6px;border:1px solid var(--line);cursor:pointer;
@@ -547,7 +550,8 @@ function renderFila(data, itens){
     const done = comAcoes
       ? `<button type="button" class="q-done" data-key="${esc(key)}" title="Marcar como concluida (localmente; avise o Claude para registrar)">&#10003;</button>`
       : `<button type="button" class="q-done" data-key="${esc(key)}" title="Desfazer conclusao">&#8634;</button>`;
-    return `<div class="q-row">
+    const isZero = comAcoes && chipCls === "chip-zero";
+    return `<div class="q-row${isZero ? " zero" : ""}">
       <div class="q-pos">${i !== null ? i+1 : ""}</div>
       <div class="badge ${badgeCls}">${esc(rotuloOrigem(it.origem))}</div>
       <div class="q-main">
