@@ -130,6 +130,22 @@
   .q-row.zero{border:2px solid var(--red);background:var(--red-soft)}
   .q-row.zero .q-ref{font-size:1.05rem;font-weight:800;text-transform:uppercase;color:var(--red);letter-spacing:.01em}
   .q-row.zero .q-desc{font-weight:600}
+  /* escala didatica por dias uteis restantes ate o prazo - mesma linguagem em toda a pagina */
+  .chip-vencido{background:var(--red);color:#fff}
+  .chip-critico{background:var(--red-soft);color:var(--red)}
+  .chip-alerta{background:var(--amber-soft);color:var(--amber)}
+  .chip-moderado{background:var(--violet-soft);color:var(--violet)}
+  .chip-tranquilo{background:var(--teal-soft);color:var(--teal)}
+  .dot-vencido{background:var(--red);box-shadow:0 0 0 2px var(--red-soft)}
+  .dot-critico{background:var(--red)}
+  .dot-alerta{background:var(--amber)}
+  .dot-moderado{background:var(--violet)}
+  .dot-tranquilo{background:var(--teal)}
+  .lembrete.lem-vencido{border-left-color:var(--red)}
+  .lembrete.lem-critico{border-left-color:var(--red)}
+  .lembrete.lem-alerta{border-left-color:var(--amber)}
+  .lembrete.lem-moderado{border-left-color:var(--violet)}
+  .lembrete.lem-tranquilo{border-left-color:var(--teal)}
   .q-actions{display:flex;align-items:center;gap:6px}
   .q-done{
     width:22px;height:22px;border-radius:6px;border:1px solid var(--line);cursor:pointer;
@@ -450,6 +466,49 @@ function fmtPrazo(prazo){
   const dt = parseISO(prazo);
   return dt ? dt.toLocaleDateString("pt-BR") : "";
 }
+// dias UTEIS (seg-sex) entre hoje e o prazo - negativo se ja passou
+function diasUteisAte(prazo){
+  const dt = parseISO(prazo);
+  if(!dt) return null;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  if(dt.getTime() === hoje.getTime()) return 0;
+  const passo = dt > hoje ? 1 : -1;
+  let cur = new Date(hoje), n = 0;
+  while(cur.getTime() !== dt.getTime()){
+    cur.setDate(cur.getDate() + passo);
+    if(cur.getDay() !== 0 && cur.getDay() !== 6) n += passo;
+  }
+  return n;
+}
+// escala didatica de cores por dias uteis restantes - usada em QUALQUER dado com prazo definido
+function prazoInfo(prazo){
+  const du = diasUteisAte(prazo);
+  if(du === null) return null;
+  let cls, label;
+  if(du < 0){ cls = "chip-vencido"; label = "vencido (" + Math.abs(du) + "du)"; }
+  else if(du === 0){ cls = "chip-critico"; label = "hoje"; }
+  else if(du === 1){ cls = "chip-critico"; label = "amanha"; }
+  else if(du <= 4){ cls = "chip-alerta"; label = du + " du"; }
+  else if(du <= 10){ cls = "chip-moderado"; label = du + " du"; }
+  else { cls = "chip-tranquilo"; label = du + " du"; }
+  return { cls, label, du, data: fmtPrazo(prazo) };
+}
+function prazoChipHtml(prazo){
+  const info = prazoInfo(prazo);
+  if(!info) return "";
+  return `<span class="chip ${info.cls}" title="prazo ${esc(info.data)} - ${info.du} dia(s) util(eis) a partir de hoje">${esc(info.data)} &middot; ${esc(info.label)}</span>`;
+}
+// entre uma lista de itens com .prazo, acha o prazo mais urgente (menor du)
+function piorPrazo(itens){
+  let pior = null;
+  for(const it of (itens || [])){
+    if(!it.prazo) continue;
+    const info = prazoInfo(it.prazo);
+    if(!info) continue;
+    if(pior === null || info.du < pior.du) pior = info;
+  }
+  return pior;
+}
 
 // ---- fila unica -------------------------------------------------------
 // rank 0 urgente | 1 prazo<=7d | 2 analisar | 3 prazo longo | 4 sem prazo | 5 aguardando
@@ -474,10 +533,13 @@ function classificar(item){
   return {rank:4, sub:0};
 }
 function chipDe(item, cls){
-  const d = item.prazo ? diasAte(item.prazo) : null;
   if(cls.rank === -1) return ["chip-zero", "PRIOR. 0"];
-  if(cls.rank === 0) return ["chip-urgente", item.prioridade === "urgente" && d === null ? "URGENTE" : d !== null ? (d < 0 ? "VENCIDO" : d === 0 ? "HOJE" : d + "d") : "URGENTE"];
-  if(cls.rank === 1) return [d <= 15 ? "chip-alta" : "chip-neutra", d + " dias"];
+  // qualquer item com prazo definido usa a escala didatica por dias uteis, nao importa o rank
+  if(item.prazo){
+    const info = prazoInfo(item.prazo);
+    if(info) return [info.cls, info.label];
+  }
+  if(cls.rank === 0) return ["chip-urgente", "URGENTE"];
   if(cls.rank === 2) return ["chip-alta", "Alta"];
   if(cls.rank === 3) return ["chip-analisar", "Analisar"];
   if(cls.rank === 6) return ["chip-aguardando", "Aguardando"];
@@ -577,11 +639,11 @@ function renderLembretes(data){
   const done = doneLocais();
   const ordenados = [...ls].sort((a,b) => (a.data||"").localeCompare(b.data||""));
   function linha(l, concluido){
-    const d = diasAte(l.data);
-    const rot = d === null ? "" : d < 0 ? "passou" : d === 0 ? "HOJE" : d === 1 ? "amanha" : "em " + d + " dias";
+    const info = prazoInfo(l.data);
+    const bordaCls = info ? info.cls.replace("chip-", "lem-") : "";
     const key = "Lembrete|" + (l.id || l.data + "|" + l.texto);
-    return `<div class="lembrete${concluido ? " feito" : ""}">
-      <span class="quando">${fmtPrazo(l.data)}${rot ? " (" + rot + ")" : ""}</span>
+    return `<div class="lembrete${concluido ? " feito" : ""}${bordaCls ? " " + bordaCls : ""}">
+      <span class="quando">${info ? prazoChipHtml(l.data) : esc(fmtPrazo(l.data))}</span>
       <span class="texto">${esc(l.texto)}</span>
       <button type="button" class="q-done" data-lembretekey="${esc(key)}" title="${concluido ? "Reabrir" : "Marcar como resolvido (local; avise o Claude para registrar)"}">${concluido ? "&#8634;" : "&#10003;"}</button>
     </div>`;
@@ -642,7 +704,7 @@ function renderSei(data, fila){
           ? '<span class="chip chip-aguardando">Aguardando</span>'
           : '<span class="chip chip-analisar">Não analisado</span>';
     let info = p.titulo ? `<b>${esc(p.titulo)}</b>` : '<span style="color:var(--ink-faint)">-</span>';
-    if(p.prazo) info += ` &middot; prazo <b>${fmtPrazo(p.prazo)}</b>`;
+    if(p.prazo) info += ` ${prazoChipHtml(p.prazo)}`;
     if(p.analise){
       const a = p.analise;
       info += `<div class="analise-det">${a.resumo ? esc(a.resumo) : ""}${a.outrasVaras ? "<br><b>Outras varas:</b> " + esc(a.outrasVaras) : ""}${a.acao ? "<br><b>Proxima acao:</b> " + esc(a.acao) : ""}</div>`;
@@ -812,6 +874,7 @@ function renderRadar(data){
         <span class="radar-alvo"${resolvido ? ' style="text-decoration:line-through"' : ""}>${esc(r.alvo || "")}</span>
         ${r.naFila ? '<span class="radar-tipo" title="tambem aparece na fila unica">na fila</span>' : ""}
         <span class="radar-nivel ${alto ? "nivel-alto" : "nivel-medio"}">${alto ? "atencao alta" : "acompanhar"}</span>
+        ${r.prazo ? prazoChipHtml(r.prazo) : ""}
         <button type="button" class="q-done" data-radarkey="${esc(key)}" title="${resolvido ? "Reabrir" : "Marcar resolvido (local; avise o Claude para remover de vez)"}">${resolvido ? "&#8634;" : "&#10003;"}</button>
       </div>
       ${r.padrao ? `<p><b>Padrao:</b> ${esc(r.padrao)}</p>` : ""}
@@ -849,12 +912,7 @@ function renderPrivadoConteudo(dados){
       const key = "priv|" + it.texto;
       const risco = done[key] ? "text-decoration:line-through;opacity:.55" : "";
       const chip = it.prioridade === "alta" ? ' <span class="chip chip-alta">alta</span>' : "";
-      let prazoChip = "";
-      if(it.prazo){
-        const d = diasAte(it.prazo);
-        const rot = d < 0 ? "atrasado" : d === 0 ? "hoje" : d === 1 ? "amanhã" : fmtPrazo(it.prazo);
-        prazoChip = ` <span class="chip ${d <= 1 ? "chip-urgente" : "chip-neutra"}">${esc(rot)}</span>`;
-      }
+      const prazoChip = it.prazo ? ` ${prazoChipHtml(it.prazo)}` : "";
       return `<div class="q-row" style="grid-template-columns:1fr auto">
         <div class="q-main"><div class="q-ref" style="font-weight:500;${risco}">${esc(it.texto)}${chip}${prazoChip}</div></div>
         <button type="button" class="q-done" data-privkey="${esc(key)}" title="${done[key] ? "Desfazer" : "Marcar como feito (local)"}">${done[key] ? "&#8634;" : "&#10003;"}</button>
@@ -877,7 +935,17 @@ async function destrancarPrivado(senha){
   const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64bytes(e.iv) }, key, b64bytes(e.ct));
   privadoDados = JSON.parse(new TextDecoder().decode(plain));
   renderPrivadoConteudo(privadoDados);
+  atualizarDotAbaPrivado();
   try { sessionStorage.setItem("fu-priv", senha); } catch(_){}
+}
+// atualiza so o dot da aba Privado (sem recriar o botao, para nao perder o listener de clique)
+function atualizarDotAbaPrivado(){
+  const btn = document.querySelector('#origemTabs .origem-tab[data-panel="privado"]');
+  if(!btn || !privadoDados) return;
+  const label = btn.dataset.label || btn.textContent;
+  const info = piorPrazo(privadoDados.itens || []);
+  const dot = info ? `<i class="dot dot-${info.cls.replace("chip-", "")}" title="prazo mais proximo: ${esc(info.data)} (${esc(info.label)})"></i> ` : "";
+  btn.innerHTML = dot + esc(label);
 }
 function wirePrivado(){
   const btn = document.getElementById("privadoUnlock");
@@ -941,6 +1009,7 @@ function panelKeyDe(nome){
   return null;
 }
 let ultimoData = null;
+let ultimaFila = [];
 const DETALHES = [];
 function chaveDe(it){ return it.origem + "|" + it.ref; }
 const BADGE_LABEL = { Solicitacao: "Solicitação" };
@@ -1016,18 +1085,31 @@ function selecionarPainel(key, disponiveis){
   aplicarPainel(disponiveis);
 }
 
+// dot colorido no botao da origem = prazo mais urgente entre os itens ativos daquela origem
+function dotPrazoOrigem(key, fila){
+  if(key === "privado") return privadoDados ? piorPrazo(privadoDados.itens || []) : null;
+  return piorPrazo((fila || []).filter(it => panelKeyDe(it.origem) === key));
+}
+function renderOrigemTabs(data, fila){
+  const origens = data.origens || [];
+  document.getElementById("origemTabs").innerHTML = origens.map(o => {
+    const key = panelKeyDe(o.nome);
+    const label = o.nome + ": " + o.status;
+    const info = key ? dotPrazoOrigem(key, fila) : null;
+    const dot = info ? `<i class="dot dot-${info.cls.replace("chip-", "")}" title="prazo mais proximo: ${esc(info.data)} (${esc(info.label)})"></i> ` : "";
+    return `<button type="button" class="origem-tab" data-panel="${key ?? ""}" data-label="${esc(label)}">${dot}${esc(label)}</button>`;
+  }).join("");
+}
 function render(data){
   ultimoData = data;
   DETALHES.length = 0;
   document.getElementById("updatedAt").textContent = "Atualizado em " + (data.atualizadoEm || "?");
   renderLembretes(data);
   const origens = data.origens || [];
-  document.getElementById("origemTabs").innerHTML = origens.map(o => {
-    const key = panelKeyDe(o.nome);
-    return `<button type="button" class="origem-tab" data-panel="${key ?? ""}">${esc(o.nome)}: ${esc(o.status)}</button>`;
-  }).join("");
-  atualizarBarraTrabalho(data);
   const fila = montarFila(data);
+  ultimaFila = fila;
+  renderOrigemTabs(data, fila);
+  atualizarBarraTrabalho(data);
   renderFila(data, fila);
   const disponiveis = origens.map(o => panelKeyDe(o.nome)).filter(Boolean);
   if(!disponiveis.includes("privado")) disponiveis.push("privado");
