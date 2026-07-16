@@ -1,0 +1,1045 @@
+<meta charset="utf-8">
+<title>Fila Unica - 14a Vara Federal</title>
+<style>
+  :root{
+    --ink:#1c1c1a;
+    --ink-soft:#55544f;
+    --ink-faint:#8b897f;
+    --paper:#faf9f5;
+    --card:#ffffff;
+    --line:#e4e2d8;
+    --blue:#2a5d8f;
+    --blue-soft:#dbe8f2;
+    --teal:#1d7a63;
+    --teal-soft:#d9ece5;
+    --amber:#a5680f;
+    --amber-soft:#f3e6cf;
+    --red:#b3392b;
+    --red-soft:#f5ded9;
+    --violet:#6b5b9e;
+    --violet-soft:#e7e2f3;
+    --note-bg:#f3e6cf;
+    --note-border:#e6d3a3;
+    --note-ink:#5c3f0a;
+    --note-ink-strong:#3d2a06;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ink:#ececea; --ink-soft:#b4b2aa; --ink-faint:#87857c;
+      --paper:#1a1a18; --card:#242320; --line:#3a3833;
+      --blue:#5a97cf; --blue-soft:#2a3f52;
+      --teal:#4bb397; --teal-soft:#1f3b34;
+      --amber:#d69a3d; --amber-soft:#3d2f14;
+      --red:#e08477; --red-soft:#452019;
+      --violet:#a99bd6; --violet-soft:#2f2946;
+      --note-bg:#33280f; --note-border:#584521;
+      --note-ink:#e8cf9a; --note-ink-strong:#f3e2bb;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#ececea; --ink-soft:#b4b2aa; --ink-faint:#87857c;
+    --paper:#1a1a18; --card:#242320; --line:#3a3833;
+    --blue:#5a97cf; --blue-soft:#2a3f52;
+    --teal:#4bb397; --teal-soft:#1f3b34;
+    --amber:#d69a3d; --amber-soft:#3d2f14;
+    --red:#e08477; --red-soft:#452019;
+    --violet:#a99bd6; --violet-soft:#2f2946;
+    --note-bg:#33280f; --note-border:#584521;
+    --note-ink:#e8cf9a; --note-ink-strong:#f3e2bb;
+  }
+  :root[data-theme="light"]{
+    --ink:#1c1c1a; --ink-soft:#55544f; --ink-faint:#8b897f;
+    --paper:#faf9f5; --card:#ffffff; --line:#e4e2d8;
+    --blue:#2a5d8f; --blue-soft:#dbe8f2;
+    --teal:#1d7a63; --teal-soft:#d9ece5;
+    --amber:#a5680f; --amber-soft:#f3e6cf;
+    --red:#b3392b; --red-soft:#f5ded9;
+    --violet:#6b5b9e; --violet-soft:#e7e2f3;
+    --note-bg:#f3e6cf; --note-border:#e6d3a3;
+    --note-ink:#5c3f0a; --note-ink-strong:#3d2a06;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    line-height:1.5;
+    padding:2.5rem 1.5rem 4rem;
+  }
+  .wrap{max-width:1440px;margin:0 auto}
+  .layout{display:grid;grid-template-columns:minmax(330px,2fr) minmax(0,3fr);gap:28px;align-items:start}
+  @media (max-width:900px){ .layout{grid-template-columns:1fr} }
+  header{margin-bottom:1.6rem}
+  h1{font-size:1.5rem;font-weight:700;margin:0 0 .25rem}
+  .sub{color:var(--ink-soft);font-size:.9rem;margin:0}
+  .updated{color:var(--ink-faint);font-size:.8rem;margin-top:.35rem}
+  section{margin-bottom:2.4rem}
+  h2{font-size:1.05rem;font-weight:700;margin:0 0 .9rem}
+  h2 .count{color:var(--ink-faint);font-weight:400}
+
+  .origem-tabs{display:flex;gap:8px;margin-bottom:1.6rem;flex-wrap:wrap}
+  .origem-tab{
+    font:inherit;font-size:.78rem;padding:4px 12px;border-radius:999px;cursor:pointer;
+    background:var(--card);border:1px solid var(--line);color:var(--ink-soft);
+  }
+  .origem-tab:hover{border-color:var(--blue);color:var(--blue)}
+  .origem-tab.active{background:var(--blue-soft);border-color:var(--blue);color:var(--blue);font-weight:700}
+  .origem-tab:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .panel-hint{font-size:.8rem;color:var(--ink-faint);margin:.2rem 0 1rem}
+  .trabalho-bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between;
+    background:var(--note-bg);border:1px solid var(--note-border);color:var(--note-ink);
+    border-radius:10px;padding:.7rem 1rem;font-size:.83rem;margin:.2rem 0 1rem}
+  .lock-inline{background:var(--card);border:1px dashed var(--line);border-radius:10px;
+    padding:1.1rem 1.2rem;color:var(--ink-soft);font-size:.88rem}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:1.4rem}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.85rem 1rem}
+  .kpi .label{font-size:.75rem;color:var(--ink-soft);margin-bottom:.25rem}
+  .kpi .value{font-size:1.45rem;font-weight:700;font-variant-numeric:tabular-nums}
+
+  /* fila unica */
+  .fila-politica{font-size:.8rem;color:var(--ink-faint);margin:0 0 .9rem}
+  .queue{display:flex;flex-direction:column;gap:8px;max-height:72vh;overflow-y:auto;padding-right:4px}
+  .q-row{
+    display:grid;grid-template-columns:34px 64px 1fr auto;gap:10px;align-items:center;
+    padding:.5rem .7rem;background:var(--card);border:1px solid var(--line);border-radius:8px;
+  }
+  .q-pos{font-size:.8rem;font-weight:700;color:var(--ink-faint);text-align:right;font-variant-numeric:tabular-nums}
+  .q-main{min-width:0}
+  .q-ref{font-size:.83rem;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .q-desc{font-size:.78rem;color:var(--ink-soft)}
+  .badge{font-size:.66rem;padding:2px 0;border-radius:5px;font-weight:700;text-align:center;letter-spacing:.03em}
+  .badge-sei{background:var(--blue-soft);color:var(--blue)}
+  .badge-outlook{background:var(--teal-soft);color:var(--teal)}
+  .badge-manual{background:var(--line);color:var(--ink-soft)}
+  .badge-pje{background:var(--amber-soft);color:var(--amber)}
+  .badge-esiest{background:var(--violet-soft);color:var(--violet)}
+  .badge-solic{background:transparent;border:1px solid var(--blue);color:var(--blue)}
+  .badge-radar{background:transparent;border:1px solid var(--red);color:var(--red)}
+  .check-ok{color:var(--teal);font-weight:700}
+  .check-no{color:var(--red);font-weight:700}
+  .chip{font-size:.7rem;padding:3px 10px;border-radius:999px;font-weight:700;white-space:nowrap}
+  .chip-urgente{background:var(--red-soft);color:var(--red)}
+  .chip-alta{background:var(--amber-soft);color:var(--amber)}
+  .chip-analisar{background:var(--blue-soft);color:var(--blue)}
+  .chip-neutra{background:var(--line);color:var(--ink-soft)}
+  .chip-aguardando{background:transparent;border:1px dashed var(--line);color:var(--ink-faint)}
+  .chip-ok{background:var(--teal-soft);color:var(--teal)}
+  .chip-zero{background:var(--red);color:#fff}
+  .q-actions{display:flex;align-items:center;gap:6px}
+  .q-done{
+    width:22px;height:22px;border-radius:6px;border:1px solid var(--line);cursor:pointer;
+    background:var(--card);color:var(--ink-faint);font-size:.8rem;line-height:1;padding:0;
+  }
+  .q-done:hover{border-color:var(--teal);color:var(--teal)}
+  .link-det{font-size:.75rem;color:var(--blue);cursor:pointer;text-decoration:underline;background:none;border:none;padding:0;font-family:inherit}
+  .done-list .q-row{opacity:.55}
+  .done-list .q-ref,.done-list .q-desc{text-decoration:line-through}
+  details.concluidas{margin-top:1rem}
+  details.concluidas summary{font-size:.82rem;color:var(--ink-faint);cursor:pointer}
+  .lembretes{display:flex;flex-direction:column;gap:6px;margin-bottom:1.6rem}
+  .lembrete{
+    display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:baseline;
+    background:var(--card);border:1px solid var(--line);border-left:3px solid var(--amber);
+    border-radius:8px;padding:.45rem .7rem;font-size:.8rem;color:var(--ink-soft);
+  }
+  .lembrete .quando{font-weight:700;color:var(--amber);white-space:nowrap;font-variant-numeric:tabular-nums}
+  dialog#popup{
+    max-width:720px;width:92vw;border:1px solid var(--line);border-radius:12px;
+    background:var(--card);color:var(--ink);padding:1.2rem 1.4rem;
+  }
+  dialog#popup::backdrop{background:rgba(0,0,0,.45)}
+  dialog#popup h3{margin:0 0 .8rem;font-size:1rem}
+  dialog#popup pre{
+    white-space:pre-wrap;font-family:inherit;font-size:.85rem;line-height:1.55;
+    background:var(--paper);border:1px solid var(--line);border-radius:8px;
+    padding:1rem;max-height:60vh;overflow:auto;margin:0 0 1rem;
+  }
+  dialog#popup .pop-btns{display:flex;gap:10px;justify-content:flex-end}
+  dialog#popup button{
+    font:inherit;font-size:.8rem;padding:6px 14px;border-radius:8px;cursor:pointer;
+    border:1px solid var(--line);background:var(--card);color:var(--ink);
+  }
+  dialog#popup button.primario{background:var(--blue);border-color:var(--blue);color:#fff}
+
+  .dots{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .dot-nv{background:var(--red)}
+  .dot-alt{background:var(--amber)}
+  .dot-devolver{background:var(--blue)}
+  .dot-minutado{background:var(--teal)}
+  .dot-aguardando_info{background:var(--ink-faint)}
+  .dot-reabertura{background:var(--blue);outline:2px solid var(--blue-soft)}
+  .dot-federacao{background:var(--teal);outline:2px solid var(--teal-soft)}
+
+  .legend{font-size:.72rem;color:var(--ink-faint);margin-top:.7rem;display:flex;gap:14px;flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+
+  /* radar */
+  .radar-card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--amber);
+    border-radius:10px;padding:.85rem 1rem;margin-bottom:12px}
+  .radar-card.alto{border-left-color:var(--red)}
+  .radar-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:.35rem}
+  .radar-tipo{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    padding:2px 8px;border-radius:999px;background:var(--line);color:var(--ink-soft)}
+  .radar-alvo{font-weight:700;font-size:.92rem}
+  .radar-nivel{margin-left:auto;font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:999px}
+  .nivel-alto{background:var(--red-soft);color:var(--red)}
+  .nivel-medio{background:var(--amber-soft);color:var(--amber)}
+  .radar-card p{margin:.2rem 0;font-size:.82rem;color:var(--ink-soft)}
+  .radar-card b{color:var(--ink)}
+
+  /* privado */
+  .lockbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:.6rem}
+  .lockbox input{font:inherit;font-size:.85rem;padding:7px 10px;border:1px solid var(--line);
+    border-radius:8px;background:var(--card);color:var(--ink);min-width:200px}
+  .lockbox button{font:inherit;font-size:.82rem;padding:7px 14px;border-radius:8px;cursor:pointer;
+    border:1px solid var(--blue);background:var(--blue);color:#fff}
+  .lock-erro{font-size:.78rem;color:var(--red)}
+  .priv-cat{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--ink-faint);margin:1rem 0 .4rem}
+  .priv-lock-msg{font-size:.85rem;color:var(--ink-soft)}
+
+  /* donut */
+  .donut-wrap{display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin:.4rem 0 1rem}
+  .donut-leg{display:flex;flex-direction:column;gap:5px;font-size:.8rem;min-width:220px;flex:1}
+  .donut-leg .lg{display:grid;grid-template-columns:14px 1fr auto auto;gap:8px;align-items:center}
+  .donut-leg .sw{width:12px;height:12px;border-radius:3px}
+  .donut-leg .lg-n{color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .donut-leg .lg-q{font-weight:700;font-variant-numeric:tabular-nums}
+  .donut-leg .lg-p{color:var(--ink-faint);font-variant-numeric:tabular-nums;min-width:38px;text-align:right}
+  .donut-center{font-size:.7rem;fill:var(--ink-soft)}
+  .donut-total{font-size:1.1rem;font-weight:700;fill:var(--ink)}
+
+  .table-wrap{max-height:56vh;overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+  table.sei{width:100%;border-collapse:collapse;font-size:.82rem}
+  table.sei th{
+    position:sticky;top:0;background:var(--card);text-align:left;font-size:.72rem;
+    color:var(--ink-soft);padding:.55rem .75rem;border-bottom:1px solid var(--line);z-index:1;
+  }
+  table.sei td{padding:.45rem .75rem;border-bottom:1px solid var(--line);vertical-align:top}
+  table.sei tr:last-child td{border-bottom:none}
+  .num{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+  .analise-det{font-size:.78rem;color:var(--ink-soft);margin-top:.25rem}
+  .analise-det b{color:var(--ink)}
+
+  .bars{display:flex;flex-direction:column;gap:10px}
+  .bar-row{display:grid;grid-template-columns:170px 1fr 46px;align-items:center;gap:10px}
+  .bar-row .name{font-size:.85rem;color:var(--ink-soft)}
+  .bar-track{background:var(--line);border-radius:5px;height:16px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:5px}
+  .bar-row .count{font-size:.85rem;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+  .fill-blue{background:var(--blue)}
+  .fill-teal{background:var(--teal)}
+
+  .note{
+    background:var(--note-bg);border:1px solid var(--note-border);border-radius:10px;
+    padding:1rem 1.1rem;font-size:.88rem;color:var(--note-ink);margin-top:1rem;
+  }
+  .note b{color:var(--note-ink-strong)}
+  h3{font-size:.92rem;font-weight:700;margin:1.4rem 0 .7rem}
+  footer{color:var(--ink-faint);font-size:.78rem;margin-top:2.5rem;border-top:1px solid var(--line);padding-top:1rem}
+  @media (max-width:560px){
+    .q-row{grid-template-columns:26px 1fr auto}
+    .q-row .badge{display:none}
+    .bar-row{grid-template-columns:110px 1fr 40px}
+  }
+</style>
+
+<div class="wrap">
+
+<header>
+  <h1>Fila Unica</h1>
+  <p class="sub">14a Vara Federal - Brasília &middot; caixa institucional, SEI, PJe e eSiest</p>
+  <p class="updated" id="updatedAt"></p>
+</header>
+
+<div class="origem-tabs" id="origemTabs"></div>
+<div id="trabalhoBar" class="trabalho-bar" hidden>
+  <span>&#128274; Detalhe de trabalho bloqueado (nomes, processos, minutas). Digite a senha da equipe para ver a fila e os paineis.</span>
+  <span class="lockbox">
+    <input type="password" id="teamSenha" placeholder="senha da equipe" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button type="button" id="teamUnlock">Destrancar</button>
+    <span class="lock-erro" id="teamErro"></span>
+  </span>
+</div>
+<p class="panel-hint">Clique em uma origem acima para abrir o painel correspondente ao lado da fila.</p>
+
+<div class="layout">
+<div class="col-fila">
+<section id="lembretesSection" hidden>
+  <h2>Lembretes</h2>
+  <div class="lembretes" id="lembretesList"></div>
+</section>
+<section id="filaSection">
+  <h2>Fila de trabalho <span class="count" id="filaCount"></span></h2>
+  <p class="fila-politica" id="filaPolitica"></p>
+  <div class="queue" id="filaList"></div>
+  <details class="concluidas" id="concluidasBox" hidden>
+    <summary id="concluidasSummary">Concluídas</summary>
+    <div class="queue done-list" id="concluidasList" style="max-height:30vh;margin-top:.6rem"></div>
+    <button type="button" class="link-det" id="copiarConclusoes" style="margin-top:.6rem">Copiar relatório de conclusões (para colar no chat do Claude) &#8599;</button>
+  </details>
+</section>
+</div>
+
+<div class="col-panel">
+<section id="seiSection" hidden>
+  <h2>Processos SEI - recebidos <span class="count" id="seiCapturado"></span></h2>
+  <div class="kpis" id="seiKpis"></div>
+  <div class="table-wrap">
+    <table class="sei">
+      <thead>
+        <tr><th># fila</th><th>Processo</th><th>Sinais</th><th>Situação</th><th>Do que se trata / prazo</th></tr>
+      </thead>
+      <tbody id="seiBody"></tbody>
+    </table>
+  </div>
+  <div class="legend">
+    <span><i class="dot dot-nv"></i> não visualizado</span>
+    <span><i class="dot dot-alt"></i> alterado</span>
+    <span><i class="dot dot-devolver"></i> para devolver</span>
+    <span><i class="dot dot-minutado"></i> minutado pela vara</span>
+    <span><i class="dot dot-aguardando_info"></i> aguardando info da equipe</span>
+    <span><i class="dot dot-reabertura"></i> reabertura programada</span>
+    <span><i class="dot dot-federacao"></i> SEI Federação</span>
+  </div>
+  <div class="note" id="seiNote"></div>
+</section>
+
+<section id="pjeSection" hidden>
+  <h2>PJe - minhas tarefas <span class="count" id="pjeCapturado"></span></h2>
+  <div class="bars" id="pjeBars"></div>
+  <h3 id="pjeGeralTitulo" hidden>Visao geral da vara - por tipo de tarefa</h3>
+  <div id="pjeDonutWrap" class="donut-wrap" hidden>
+    <div id="pjeDonut"></div>
+    <div id="pjeLegenda" class="donut-leg"></div>
+  </div>
+  <div class="note" id="pjeNote"></div>
+</section>
+
+<section id="esiestSection" hidden>
+  <h2>eSiest - processos parados <span class="count" id="esiestPeriodo"></span></h2>
+  <div class="table-wrap">
+    <table class="sei">
+      <thead><tr><th># fila</th><th>Processo</th><th>Dias parado</th><th>Onde está</th><th>Observação</th></tr></thead>
+      <tbody id="esiestBody"></tbody>
+    </table>
+  </div>
+  <div class="note" id="esiestNote"></div>
+</section>
+
+<section id="solicSection" hidden>
+  <h2>Solicitações supervenientes <span class="count" id="solicCount"></span></h2>
+  <div class="table-wrap">
+    <table class="sei">
+      <thead><tr><th># fila</th><th>Pedido</th><th>Checklist</th><th>Próximo passo</th></tr></thead>
+      <tbody id="solicBody"></tbody>
+    </table>
+  </div>
+  <div class="note" id="solicNote"></div>
+</section>
+
+<section id="pessoalSection" hidden>
+  <h2>E-mail pessoal - acionáveis <span class="count" id="pessoalCapturado"></span></h2>
+  <div class="kpis" id="pessoalKpis"></div>
+  <div class="table-wrap">
+    <table class="sei">
+      <thead><tr><th># fila</th><th>Item</th><th>O que fazer</th><th>Prioridade</th></tr></thead>
+      <tbody id="pessoalBody"></tbody>
+    </table>
+  </div>
+  <div class="note" id="pessoalNote"></div>
+</section>
+
+<section id="mailSection" hidden>
+  <h2>E-mails - Outlook (Caixa de Entrada)</h2>
+  <div class="kpis" id="kpiRow"></div>
+  <h3>Por grupo de tempo</h3>
+  <div class="bars" id="grupoBars"></div>
+  <h3>Por categoria identificada</h3>
+  <div class="bars" id="categoriaBars"></div>
+  <div class="note" id="noteBox"></div>
+</section>
+
+<section id="radarSection" hidden>
+  <h2>Radar - pontos de atencao <span class="count" id="radarCount"></span></h2>
+  <div id="radarList"></div>
+  <div class="note" id="radarNote"></div>
+</section>
+
+<section id="privadoSection" hidden>
+  <h2>Minha fila pessoal <span class="count">&#128274; privada</span></h2>
+  <div id="privadoLocked">
+    <p class="priv-lock-msg">Conteudo cifrado, visivel somente para voce. Digite a senha para destrancar (os colegas veem apenas este cadeado).</p>
+    <div class="lockbox">
+      <input type="password" id="privadoSenha" placeholder="senha" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button type="button" id="privadoUnlock">Destrancar</button>
+      <span class="lock-erro" id="privadoErro"></span>
+    </div>
+  </div>
+  <div id="privadoConteudo" hidden></div>
+</section>
+
+</div>
+</div>
+
+<dialog id="popup">
+  <h3 id="popupTitulo"></h3>
+  <pre id="popupCorpo"></pre>
+  <div class="pop-btns">
+    <button type="button" class="primario" id="popupCopiar">Copiar texto</button>
+    <button type="button" id="popupFechar">Fechar</button>
+  </div>
+</dialog>
+
+<footer>O painel lê os números de data.json e se recarrega sozinho a cada poucos minutos. Mesmo link a cada atualização.</footer>
+
+</div>
+
+<script>
+// FALLBACK: embutido por tools/embed_data.py a partir de data.json (usado quando
+// o fetch falha - ex.: preview em artefato ou arquivo aberto localmente).
+const FALLBACK = /*__DATA__*/{"atualizadoEm":"14/07/2026","origens":[{"nome":"Outlook (Caixa de Entrada)","status":"~50 itens (15/07 11:34)"},{"nome":"SEI","status":"57 recebidos, 1 p/ devolver (15/07 11:35)"},{"nome":"PJe","status":"8 minhas tarefas (12/07 22:27)"},{"nome":"eSiest","status":"24 parados >60d (13/07)"},{"nome":"E-mail pessoal","status":"~320 itens, 29 fixados (13/07 11:56)"},{"nome":"Solicitações","status":"2 em andamento"},{"nome":"Radar","status":"1 na fila, 4 no radar"},{"nome":"Privado","status":"cadeado - so voce"}],"grupos":[{"nome":"Fixado","qtd":34},{"nome":"Hoje","qtd":1},{"nome":"Ontem","qtd":13},{"nome":"Esta semana","qtd":0},{"nome":"Semana passada","qtd":0}],"categorias":[{"nome":"DIREF (avisos institucionais)","qtd":13},{"nome":"Urgencia apontada","qtd":3},{"nome":"Agendamento solicitado","qtd":2},{"nome":"Descumprimento","qtd":2},{"nome":"Certidao de objeto e pe","qtd":2},{"nome":"Magistrado","qtd":1},{"nome":"Sem categoria aplicada","qtd":24}],"filaPolitica":"0) Prioridade zero - ordem direta do Diretor ou dos juízes; 1) urgente (urgencias apontadas, agendamentos, penhoras, prazo até 2 dias ou vencido); 2) alta prioridade e prazo até 7 dias (certidoes = preferencia do Diretor; DIREF ligado a COGER); 3) triagem dos não analisados; 4) prazos mais longos; 5) sem prazo; 6) aguardando terceiros.","sei":{"capturadoEm":"15/07/2026 11:35","resumo":{"total":72,"recebidos":57,"gerados":15,"naoVisualizados":9,"alterados":16,"atribuidosAMim":5,"paraDevolver":1,"controlesDePrazo":0}},"pje":{"capturadoEm":"15/07/2026 11:33","totalVara":6098,"minhasTarefas":[{"tarefa":"Pedido de emissao de certidao de objeto e pe - Retificar e emitir","qtd":7,"etiquetas":["EXPEDIR CERTIDAO DE INTEIRO TEOR","EXPEDIR CERTIDAO DE OBJETO E PE - EMAIL","VALTER - ANALISAR"],"filaRef":"PJe certidao objeto e pe (7)"},{"tarefa":"[Civ] Analise de secretaria","qtd":5,"etiquetas":["ANOTAR BLOQUEIO","DESENTRANHAR","EXPEDIR CERTIDAO DE INTEIRO TEOR","VALTER - ANALISAR","VALTER - EXPEDIR CERTIDAO OBJETO E PE","VALTER - VERIFICAR"],"filaRef":"PJe analise de secretaria (5)"},{"tarefa":"[Civ] Minutar Despacho - Secretaria","qtd":3,"etiquetas":["ANOTAR PENHORA NO ROSTO DOS AUTOS","EXPEDIR CERTIDAO DE CREDITO","REQUER EXPEDICAO DE CERTIDAO"],"filaRef":"PJe minutar despacho (3)"},{"tarefa":"[INSPECAO] Processos inspecionados","qtd":1,"etiquetas":["ANOTAR BLOQUEIO"],"filaRef":"PJe inspecao processos (1)"},{"tarefa":"[Civ] Aguardando deposito ou negativa de RPV","qtd":1,"etiquetas":["ANOTAR BLOQUEIO"],"filaRef":null},{"tarefa":"[Civ] Escolher tipo de requisicao de pagamento","qtd":1,"etiquetas":["ANOTAR BLOQUEIO"],"filaRef":null},{"tarefa":"[Civ] Recebidos do arquivo","qtd":1,"etiquetas":["EXPEDIR CERTIDAO DE INTEIRO TEOR - EMAIL"],"filaRef":"PJe recebidos arquivo (1)"},{"tarefa":"[Civ] Remetidos a Contadoria","qtd":1,"etiquetas":["EXPEDIR CERTIDAO DE OBJETO E PE - EMAIL"],"filaRef":"PJe remetidos contadoria (1)"},{"tarefa":"[Civ] Sobrestados - prazo decorrido","qtd":1,"etiquetas":["EXPEDIR CERTIDAO DE OBJETO E PE - EMAIL"],"filaRef":"PJe sobrestados certidao (1)"}],"nota":"Coluna do meio (Minhas tarefas): 21 processos em 9 grupos - certidoes (prioridade do Diretor), penhora a anotar (urgente) e 1 de [INSPECAO]. Assinaturas: 3 (Oficio Enviando Informacoes). O grafico e da 3a coluna (visao geral da vara, 6.098 tarefas) - 'Aguardando prazo automatico' (1.552) e 'Minutar Despacho - Secretaria' (629) dominam; o restante e uma cauda longa.","totalMinhas":21,"assinaturas":{"total":3,"detalhe":"Oficio Enviando Informacoes"},"geralTarefas":[{"nome":"Aguardando prazo automatico","qtd":1552},{"nome":"Minutar Despacho - Secretaria","qtd":629},{"nome":"Aguardando deposito/negativa RPV","qtd":167},{"nome":"Aguardando devolucao Carta Precatoria","qtd":140},{"nome":"Aguardando deposito/negativa precatorio","qtd":136},{"nome":"Analise de secretaria","qtd":135},{"nome":"Aguardando prazo manual","qtd":106},{"nome":"Escolher tipo de requisicao de pagamento","qtd":99},{"nome":"Minutar Sentenca - Gabinete","qtd":92},{"nome":"Revisar Despacho - Secretaria","qtd":83},{"nome":"Recebidos rotina com manifestacao","qtd":74},{"nome":"Aguardando devolucao de mandado","qtd":67}],"geralOutros":2818},"esiest":{"periodo":"01/07/2026 a 13/07/2026","limiarDias":60},"temTrabalho":true}/*__END__*/;
+
+const REFRESH_MS = 5 * 60 * 1000;
+const FLAG_LABEL = {
+  nv: "não visualizado", alt: "alterado", devolver: "para devolver",
+  minutado: "minutado pela vara", aguardando_info: "aguardando info da equipe",
+  reabertura: "reabertura programada", federacao: "SEI Federação"
+};
+
+function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function parseISO(d){ // "AAAA-MM-DD" -> Date local
+  if(!d) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d);
+  return m ? new Date(+m[1], +m[2]-1, +m[3]) : null;
+}
+function diasAte(prazo){
+  const dt = parseISO(prazo);
+  if(!dt) return null;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  return Math.round((dt - hoje) / 86400000);
+}
+function fmtPrazo(prazo){
+  const dt = parseISO(prazo);
+  return dt ? dt.toLocaleDateString("pt-BR") : "";
+}
+
+// ---- fila unica -------------------------------------------------------
+// rank 0 urgente | 1 prazo<=7d | 2 analisar | 3 prazo longo | 4 sem prazo | 5 aguardando
+function classificar(item){
+  const d = item.prazo ? diasAte(item.prazo) : null;
+  if(item.prioridade === "maxima") return {rank:-1, sub:0};
+  if(item.prioridade === "urgente") return {rank:0, sub:-99};
+  if(d !== null && d <= 2) return {rank:0, sub:d};
+  if(d !== null && d <= 7) return {rank:1, sub:d};
+  if(item.prioridade === "alta") return {rank:1, sub:50};
+  if(item.status === "aguardando") return {rank:5, sub:0};
+  if(item.prioridade === "baixa") return {rank:4, sub:50};
+  if(item.tarefa === "Analisar"){
+    const f = item.flags || [];
+    const w = (f.includes("devolver")?4:0) + (f.includes("nv")?2:0) + (f.includes("alt")?1:0) - (f.includes("aguardando_info")?3:0);
+    return {rank:2, sub:-w};
+  }
+  if(d !== null) return {rank:3, sub:d};
+  return {rank:4, sub:0};
+}
+function chipDe(item, cls){
+  const d = item.prazo ? diasAte(item.prazo) : null;
+  if(cls.rank === -1) return ["chip-zero", "PRIOR. 0"];
+  if(cls.rank === 0) return ["chip-urgente", item.prioridade === "urgente" ? "URGENTE" : d !== null ? (d < 0 ? "VENCIDO" : d === 0 ? "HOJE" : d + "d") : "URGENTE"];
+  if(cls.rank === 1) return ["chip-alta", d !== null ? d + " dias" : "Alta"];
+  if(cls.rank === 2) return ["chip-analisar", "Analisar"];
+  if(cls.rank === 3) return ["chip-neutra", d + " dias"];
+  if(cls.rank === 5) return ["chip-aguardando", "Aguardando"];
+  return ["chip-neutra", "Sem prazo"];
+}
+function montarFila(data){
+  const itens = [];
+  (data.sei?.processos || []).forEach((p, i) => {
+    if(p.status === "concluido") return;
+    itens.push({
+      origem: "SEI", ref: p.numero,
+      titulo: p.titulo || null, prazo: p.prazo || null,
+      tarefa: p.status === "analisado" ? "Resolver" : "Analisar",
+      flags: p.flags || [], prioridade: p.prioridade || null,
+      status: p.status, ordem: i, detalhe: p.minuta || null
+    });
+  });
+  (data.tarefas || []).forEach((t, i) => {
+    if(t.status === "concluido") return;
+    itens.push({
+      origem: t.origem || "Manual", ref: t.ref || "", titulo: t.titulo || "",
+      prazo: t.prazo || null, tarefa: t.tarefa || "Resolver",
+      flags: t.flags || [], prioridade: t.prioridade || null,
+      status: t.status || "aberto", ordem: 1000 + i, detalhe: t.detalhe || null
+    });
+  });
+  (data.radar?.itens || []).forEach((r, i) => {
+    if(r.status === "concluido" || !r.naFila) return;
+    itens.push({
+      origem: "Radar", ref: r.ref, titulo: r.resumoFila || r.alvo || "",
+      prazo: r.prazo || null, tarefa: "Resolver", flags: [],
+      prioridade: r.prioridade || null, status: "aberto", ordem: 2000 + i, detalhe: null
+    });
+  });
+  const done = doneLocais();
+  const ativos = itens.filter(it => !done[chaveDe(it)]);
+  ativos.forEach(it => { it.cls = classificar(it); });
+  ativos.sort((a,b) => a.cls.rank - b.cls.rank || a.cls.sub - b.cls.sub || a.ordem - b.ordem);
+  ativos.doneLocal = itens.filter(it => done[chaveDe(it)]);
+  return ativos;
+}
+function mapaPosicoes(fila){
+  const m = new Map();
+  fila.forEach((it, i) => m.set(it.origem + "|" + it.ref, i + 1));
+  return m;
+}
+const LOCK_HTML = '<div class="lock-inline">&#128274; Detalhe bloqueado. Digite a senha da equipe na barra acima para ver este conteudo.</div>';
+function renderFila(data, itens){
+  document.getElementById("filaPolitica").textContent = "Política: " + (data.filaPolitica || "");
+  if(!data.destravado){
+    document.getElementById("filaCount").textContent = "";
+    document.getElementById("filaList").innerHTML = LOCK_HTML;
+    const cb = document.getElementById("concluidasBox"); if(cb) cb.hidden = true;
+    return;
+  }
+  document.getElementById("filaCount").textContent = "(" + itens.length + " itens)";
+  function linha(it, i, comAcoes){
+    const [chipCls, chipTxt] = chipDe(it, it.cls || classificar(it));
+    const badgeCls = it.origem === "SEI" ? "badge-sei" : it.origem === "Outlook" ? "badge-outlook" : it.origem === "PJe" ? "badge-pje" : it.origem === "eSiest" ? "badge-esiest" : it.origem === "Solicitacao" ? "badge-solic" : it.origem === "Radar" ? "badge-radar" : "badge-manual";
+    const dots = (it.flags || []).map(f => `<i class="dot dot-${esc(f)}" title="${esc(FLAG_LABEL[f] || f)}"></i>`).join("");
+    let desc = it.titulo
+      ? esc(it.titulo) + (it.prazo ? " &middot; prazo " + fmtPrazo(it.prazo) : "")
+      : (it.tarefa === "Analisar" ? "Triagem: abrir e identificar do que se trata" : "");
+    if(it.detalhe){
+      const idx = DETALHES.push(it.detalhe) - 1;
+      desc += ` &middot; <button type="button" class="link-det" data-det="${idx}">${esc(it.detalhe.titulo || "abrir detalhe")} &#8599;</button>`;
+    }
+    const key = chaveDe(it);
+    const done = comAcoes
+      ? `<button type="button" class="q-done" data-key="${esc(key)}" title="Marcar como concluida (localmente; avise o Claude para registrar)">&#10003;</button>`
+      : `<button type="button" class="q-done" data-key="${esc(key)}" title="Desfazer conclusao">&#8634;</button>`;
+    return `<div class="q-row">
+      <div class="q-pos">${i !== null ? i+1 : ""}</div>
+      <div class="badge ${badgeCls}">${esc(rotuloOrigem(it.origem))}</div>
+      <div class="q-main">
+        <div class="q-ref">${esc(it.ref)}<span class="dots">${dots}</span></div>
+        ${desc ? `<div class="q-desc">${desc}</div>` : ""}
+      </div>
+      <div class="q-actions"><span class="chip ${chipCls}">${chipTxt}</span>${done}</div>
+    </div>`;
+  }
+  document.getElementById("filaList").innerHTML = itens.map((it, i) => linha(it, i, true)).join("");
+  const doneItens = itens.doneLocal || [];
+  const box = document.getElementById("concluidasBox");
+  box.hidden = doneItens.length === 0;
+  document.getElementById("concluidasSummary").textContent =
+    "Concluídas nesta tela (" + doneItens.length + ") - avise o Claude para registrar definitivamente";
+  document.getElementById("concluidasList").innerHTML = doneItens.map(it => linha(it, null, false)).join("");
+}
+
+function renderLembretes(data){
+  const sec = document.getElementById("lembretesSection");
+  const ls = data.lembretes || [];
+  sec.hidden = ls.length === 0;
+  const ordenados = [...ls].sort((a,b) => (a.data||"").localeCompare(b.data||""));
+  document.getElementById("lembretesList").innerHTML = ordenados.map(l => {
+    const d = diasAte(l.data);
+    const rot = d === null ? "" : d < 0 ? "passou" : d === 0 ? "HOJE" : d === 1 ? "amanha" : "em " + d + " dias";
+    return `<div class="lembrete"><span class="quando">${fmtPrazo(l.data)}${rot ? " (" + rot + ")" : ""}</span><span>${esc(l.texto)}</span></div>`;
+  }).join("");
+}
+
+// ---- secao SEI --------------------------------------------------------
+function renderSei(data, fila){
+  const sei = data.sei;
+  if(!sei) return;
+  const pos = mapaPosicoes(fila);
+  document.getElementById("seiCapturado").textContent = "(captura de " + (sei.capturadoEm || "?") + ")";
+  const rr = sei.resumo || {};
+  document.getElementById("seiKpis").innerHTML = [
+    { label: "Recebidos", value: rr.recebidos ?? "-" },
+    { label: "Nao visualizados", value: rr.naoVisualizados ?? "-" },
+    { label: "Alterados", value: rr.alterados ?? "-" },
+    { label: "Para devolver", value: rr.paraDevolver ?? "-" },
+    { label: "Controles de prazo", value: rr.controlesDePrazo ?? "-" }
+  ].map(k => `<div class="kpi"><div class="label">${esc(k.label)}</div><div class="value">${esc(k.value)}</div></div>`).join("");
+  if(!data.destravado || !sei.processos){
+    document.getElementById("seiBody").innerHTML = '<tr><td colspan="5">' + LOCK_HTML + '</td></tr>';
+    document.getElementById("seiNote").innerHTML = "";
+    return;
+  }
+  document.getElementById("seiCapturado").textContent = "(captura de " + (sei.capturadoEm || "?") + ")";
+  const procs = [...(sei.processos || [])].sort((a, b) =>
+    (pos.get("SEI|" + a.numero) ?? 9999) - (pos.get("SEI|" + b.numero) ?? 9999));
+  const analisados = procs.filter(p => p.status !== "nao_analisado").length;
+  const r = sei.resumo || {};
+  const kpis = [
+    { label: "Recebidos", value: r.recebidos ?? procs.length },
+    { label: "Não visualizados", value: r.naoVisualizados ?? "-" },
+    { label: "Alterados", value: r.alterados ?? "-" },
+    { label: "Analisados", value: analisados + "/" + procs.length },
+    { label: "Para devolver", value: r.paraDevolver ?? "-" },
+    { label: "Controles de prazo", value: r.controlesDePrazo ?? "-" }
+  ];
+  document.getElementById("seiKpis").innerHTML = kpis.map(k =>
+    `<div class="kpi"><div class="label">${esc(k.label)}</div><div class="value">${esc(k.value)}</div></div>`
+  ).join("");
+  document.getElementById("seiBody").innerHTML = procs.map(p => {
+    const dots = (p.flags || []).map(f => `<i class="dot dot-${esc(f)}" title="${esc(FLAG_LABEL[f] || f)}"></i>`).join(" ");
+    const st = p.status === "analisado"
+      ? '<span class="chip chip-ok">Analisado</span>'
+      : p.status === "concluido"
+        ? '<span class="chip chip-ok">Concluído &#10003;</span>'
+        : p.status === "aguardando"
+          ? '<span class="chip chip-aguardando">Aguardando</span>'
+          : '<span class="chip chip-analisar">Não analisado</span>';
+    let info = p.titulo ? `<b>${esc(p.titulo)}</b>` : '<span style="color:var(--ink-faint)">-</span>';
+    if(p.prazo) info += ` &middot; prazo <b>${fmtPrazo(p.prazo)}</b>`;
+    if(p.analise){
+      const a = p.analise;
+      info += `<div class="analise-det">${a.resumo ? esc(a.resumo) : ""}${a.outrasVaras ? "<br><b>Outras varas:</b> " + esc(a.outrasVaras) : ""}${a.acao ? "<br><b>Proxima acao:</b> " + esc(a.acao) : ""}</div>`;
+    }
+    if(p.minuta){
+      const idx = DETALHES.push(p.minuta) - 1;
+      info += `<div style="margin-top:.3rem"><button type="button" class="link-det" data-det="${idx}">Abrir minuta do expediente &#8599;</button></div>`;
+    }
+    const fp = pos.get("SEI|" + p.numero);
+    return `<tr><td class="q-pos">${fp ?? "-"}</td><td class="num">${esc(p.numero)}</td><td>${dots}</td><td>${st}</td><td>${info}</td></tr>`;
+  }).join("");
+  document.getElementById("seiNote").innerHTML = sei.nota ? "<b>Nota:</b> " + esc(sei.nota) : "";
+}
+
+// ---- secao PJe --------------------------------------------------------
+function renderPje(data, fila){
+  if(!data.pje) return;
+  const pj = data.pje;
+  const pos = mapaPosicoes(fila);
+  document.getElementById("pjeCapturado").textContent = "(captura de " + (pj.capturadoEm || "?") + (pj.totalVara ? " - vara inteira: " + pj.totalVara + " tarefas" : "") + ")";
+  const items = (pj.minhasTarefas || [])
+    .map(t => {
+      const fp = t.filaRef ? pos.get("PJe|" + t.filaRef) : null;
+      return { fp: fp ?? 9999,
+        nome: (fp ? "#" + fp + " - " : "") + t.tarefa + (t.etiquetas?.length ? " [" + t.etiquetas.join(", ") + "]" : ""),
+        qtd: t.qtd };
+    })
+    .sort((a, b) => a.fp - b.fp);
+  renderBars("pjeBars", items, "fill-blue");
+  renderPjeDonut(pj);
+  document.getElementById("pjeNote").innerHTML = pj.nota ? "<b>Nota:</b> " + esc(pj.nota) : "";
+}
+// paleta categorica (distinta, legivel em claro/escuro)
+const DONUT_CORES = ["#2a5d8f","#1d7a63","#a5680f","#b3392b","#6b5b9e","#4b8fa6","#8a7b2e","#a34d7d","#3d7a3d","#7a5230","#5a6b8f","#9a9488","#c9c4b8"];
+function renderPjeDonut(pj){
+  const wrap = document.getElementById("pjeDonutWrap");
+  const tit = document.getElementById("pjeGeralTitulo");
+  const dados = pj.geralTarefas || [];
+  if(!dados.length){ wrap.hidden = true; tit.hidden = true; return; }
+  wrap.hidden = false; tit.hidden = false;
+  const fatias = dados.map((x, i) => ({ nome: x.nome, qtd: x.qtd, cor: DONUT_CORES[i % DONUT_CORES.length] }));
+  if(pj.geralOutros && pj.geralOutros > 0) fatias.push({ nome: "Outros (categorias menores)", qtd: pj.geralOutros, cor: "#c9c4b8" });
+  const total = fatias.reduce((a, f) => a + f.qtd, 0);
+  const R = 80, r = 48, C = 100, TAU = Math.PI * 2;
+  let ang = -Math.PI / 2, paths = "";
+  fatias.forEach(f => {
+    const frac = f.qtd / total, a1 = ang, a2 = ang + frac * TAU; ang = a2;
+    const big = frac > 0.5 ? 1 : 0;
+    const x1 = C + R * Math.cos(a1), y1 = C + R * Math.sin(a1);
+    const x2 = C + R * Math.cos(a2), y2 = C + R * Math.sin(a2);
+    const xi2 = C + r * Math.cos(a2), yi2 = C + r * Math.sin(a2);
+    const xi1 = C + r * Math.cos(a1), yi1 = C + r * Math.sin(a1);
+    paths += `<path d="M${x1} ${y1} A${R} ${R} 0 ${big} 1 ${x2} ${y2} L${xi2} ${yi2} A${r} ${r} 0 ${big} 0 ${xi1} ${yi1} Z" fill="${f.cor}"><title>${esc(f.nome)}: ${f.qtd} (${Math.round(frac*100)}%)</title></path>`;
+  });
+  document.getElementById("pjeDonut").innerHTML =
+    `<svg viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Distribuicao das ${total} tarefas da vara por tipo">
+      ${paths}
+      <text x="100" y="96" text-anchor="middle" class="donut-total">${total.toLocaleString("pt-BR")}</text>
+      <text x="100" y="112" text-anchor="middle" class="donut-center">tarefas</text>
+    </svg>`;
+  document.getElementById("pjeLegenda").innerHTML = fatias.map(f =>
+    `<div class="lg"><span class="sw" style="background:${f.cor}"></span><span class="lg-n" title="${esc(f.nome)}">${esc(f.nome)}</span><span class="lg-q">${f.qtd.toLocaleString("pt-BR")}</span><span class="lg-p">${Math.round(f.qtd/total*100)}%</span></div>`
+  ).join("");
+}
+
+// ---- secao eSiest -------------------------------------------------------
+function renderEsiest(data, fila){
+  if(!data.esiest) return;
+  const es = data.esiest;
+  const pos = mapaPosicoes(fila);
+  document.getElementById("esiestPeriodo").textContent = "(mais de " + (es.limiarDias ?? 60) + " dias - boletim " + (es.periodo || "?") + ")";
+  if(!data.destravado || !es.processos){
+    document.getElementById("esiestBody").innerHTML = '<tr><td colspan="5">' + LOCK_HTML + '</td></tr>';
+    document.getElementById("esiestNote").innerHTML = "";
+    return;
+  }
+  const eprocs = [...(es.processos || [])].sort((a, b) =>
+    (pos.get("eSiest|" + a.numero) ?? 9999) - (pos.get("eSiest|" + b.numero) ?? 9999));
+  document.getElementById("esiestBody").innerHTML = eprocs.map(pr => {
+    const chip = pr.prioridadeLegal ? ' <span class="chip chip-alta">prioridade legal</span>' : "";
+    const etq = pr.etiquetas?.length ? '<div class="analise-det">' + esc(pr.etiquetas.join(", ")) + "</div>" : "";
+    const fp = pos.get("eSiest|" + pr.numero);
+    return `<tr><td class="q-pos">${fp ?? "-"}</td><td class="num">${esc(pr.numero)}<div class="analise-det">${esc(pr.classe || "")}</div></td>
+      <td><b>${pr.dias}</b></td>
+      <td>${esc(pr.localizacao || "")}${chip}</td>
+      <td>${esc(pr.obs || "")}${etq}</td></tr>`;
+  }).join("");
+  document.getElementById("esiestNote").innerHTML = es.nota ? "<b>Nota:</b> " + esc(es.nota) : "";
+}
+
+// ---- secao solicitacoes -------------------------------------------------
+function renderSolic(data, fila){
+  if(!data.destravado || !data.solicitacoes){
+    const sc = document.getElementById("solicCount"); if(sc) sc.textContent = "";
+    document.getElementById("solicBody").innerHTML = '<tr><td colspan="4">' + LOCK_HTML + '</td></tr>';
+    document.getElementById("solicNote").innerHTML = "";
+    return;
+  }
+  const so = data.solicitacoes;
+  const pos = mapaPosicoes(fila);
+  const itens = so.itens || [];
+  document.getElementById("solicCount").textContent = "(" + itens.length + " em andamento)";
+  document.getElementById("solicBody").innerHTML = itens.map(s => {
+    const fp = pos.get("Solicitacao|" + s.ref);
+    const cl = (s.checklist || []).map(c =>
+      `<div>${c.feito ? '<span class="check-ok">&#10003;</span>' : '<span class="check-no">&#9675;</span>'} ${esc(c.passo)}${c.obs ? ' <span class="analise-det" style="display:inline">(' + esc(c.obs) + ')</span>' : ''}</div>`
+    ).join("");
+    const feitos = (s.checklist || []).filter(c => c.feito).length;
+    return `<tr><td class="q-pos">${fp ?? "-"}</td>
+      <td class="num" style="white-space:normal"><b>${esc(s.ref)}</b><div class="analise-det">${esc(s.pedido)}<br>Solicitante: ${esc(s.solicitante || "")} &middot; desde ${esc(s.desde || "?")}</div></td>
+      <td>${cl}<div class="analise-det">${feitos}/${(s.checklist || []).length} concluidos</div></td>
+      <td>${esc(s.proximo || "")}</td></tr>`;
+  }).join("");
+  document.getElementById("solicNote").innerHTML = so.nota ? "<b>Nota:</b> " + esc(so.nota) : "";
+}
+
+// ---- secao e-mail pessoal ----------------------------------------------
+function renderPessoal(data, fila){
+  if(!data.destravado || !data.pessoal){
+    const pc = document.getElementById("pessoalCapturado"); if(pc) pc.textContent = "";
+    document.getElementById("pessoalKpis").innerHTML = "";
+    document.getElementById("pessoalBody").innerHTML = '<tr><td colspan="4">' + LOCK_HTML + '</td></tr>';
+    document.getElementById("pessoalNote").innerHTML = "";
+    return;
+  }
+  const ps = data.pessoal;
+  document.getElementById("pessoalCapturado").textContent = "(captura de " + (ps.capturadoEm || "?") + ")";
+  const r = ps.resumo || {};
+  const kpis = [
+    { label: "Total visível", value: r.totalVisivel ?? "-" },
+    { label: "Fixados", value: r.afixados ?? "-" },
+    { label: "eSosTI aguardando você", value: r.aguardandoUsuario ?? "-" },
+    { label: "Newsletter/promo", value: r.newsletters ?? "-" },
+    { label: "Acionáveis na fila", value: r.acionaveis ?? "-" }
+  ];
+  document.getElementById("pessoalKpis").innerHTML = kpis.map(k =>
+    `<div class="kpi"><div class="label">${esc(k.label)}</div><div class="value">${esc(k.value)}</div></div>`
+  ).join("");
+  const itens = fila.map((it, i) => ({ it, pos: i + 1 })).filter(x => x.it.origem === "Pessoal");
+  document.getElementById("pessoalBody").innerHTML = itens.map(x => {
+    const [cCls, cTxt] = chipDe(x.it, x.it.cls);
+    return `<tr><td class="q-pos">${x.pos}</td><td class="num">${esc(x.it.ref)}</td><td>${esc(x.it.titulo || "")}</td><td><span class="chip ${cCls}">${cTxt}</span></td></tr>`;
+  }).join("");
+  document.getElementById("pessoalNote").innerHTML = ps.nota ? "<b>Nota:</b> " + esc(ps.nota) : "";
+}
+
+// ---- secao radar ------------------------------------------------------
+function renderRadar(data){
+  if(!data.destravado || !data.radar){
+    const rc = document.getElementById("radarCount"); if(rc) rc.textContent = "";
+    document.getElementById("radarList").innerHTML = LOCK_HTML;
+    document.getElementById("radarNote").innerHTML = "";
+    return;
+  }
+  const rd = data.radar;
+  const done = doneLocais();
+  const itens = (rd.itens || []).filter(r => r.status !== "concluido");
+  const ativos = itens.filter(r => !done["Radar|" + r.ref]).length;
+  document.getElementById("radarCount").textContent = "(" + ativos + " ativos)";
+  document.getElementById("radarList").innerHTML = itens.map(r => {
+    const key = "Radar|" + r.ref;
+    const resolvido = !!done[key];
+    const alto = r.nivel === "alto";
+    return `<div class="radar-card ${alto ? "alto" : ""}"${resolvido ? ' style="opacity:.55"' : ""}>
+      <div class="radar-head">
+        <span class="radar-tipo">${esc(r.tipo || "")}</span>
+        <span class="radar-alvo"${resolvido ? ' style="text-decoration:line-through"' : ""}>${esc(r.alvo || "")}</span>
+        ${r.naFila ? '<span class="radar-tipo" title="tambem aparece na fila unica">na fila</span>' : ""}
+        <span class="radar-nivel ${alto ? "nivel-alto" : "nivel-medio"}">${alto ? "atencao alta" : "acompanhar"}</span>
+        <button type="button" class="q-done" data-radarkey="${esc(key)}" title="${resolvido ? "Reabrir" : "Marcar resolvido (local; avise o Claude para remover de vez)"}">${resolvido ? "&#8634;" : "&#10003;"}</button>
+      </div>
+      ${r.padrao ? `<p><b>Padrao:</b> ${esc(r.padrao)}</p>` : ""}
+      ${r.contexto ? `<p><b>Contexto:</b> ${esc(r.contexto)}</p>` : ""}
+      ${r.acao ? `<p><b>Como tratar:</b> ${esc(r.acao)}</p>` : ""}
+    </div>`;
+  }).join("");
+  document.getElementById("radarNote").innerHTML = rd.nota ? "<b>Nota:</b> " + esc(rd.nota) : "";
+  document.querySelectorAll("#radarList button[data-radarkey]").forEach(b =>
+    b.addEventListener("click", () => alternarDone(b.dataset.radarkey)));
+}
+
+// ---- secao privada (cifrada; decifra no navegador) --------------------
+function b64bytes(s){ return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+async function derivarChave(senha, salt, iters){
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(senha), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: salt, iterations: iters, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+}
+function renderPrivadoConteudo(dados){
+  const cats = {};
+  (dados.itens || []).forEach(it => { (cats[it.cat || "Geral"] = cats[it.cat || "Geral"] || []).push(it); });
+  const done = doneLocais();
+  let html = "";
+  for(const cat of Object.keys(cats)){
+    html += `<div class="priv-cat">${esc(cat)}</div>`;
+    html += cats[cat].map(it => {
+      const key = "priv|" + it.texto;
+      const risco = done[key] ? "text-decoration:line-through;opacity:.55" : "";
+      const chip = it.prioridade === "alta" ? ' <span class="chip chip-alta">alta</span>' : "";
+      return `<div class="q-row" style="grid-template-columns:1fr auto">
+        <div class="q-main"><div class="q-ref" style="font-weight:500;${risco}">${esc(it.texto)}${chip}</div></div>
+        <button type="button" class="q-done" data-privkey="${esc(key)}" title="${done[key] ? "Desfazer" : "Marcar como feito (local)"}">${done[key] ? "&#8634;" : "&#10003;"}</button>
+      </div>`;
+    }).join("");
+  }
+  const el = document.getElementById("privadoConteudo");
+  el.innerHTML = html;
+  el.hidden = false;
+  document.getElementById("privadoLocked").hidden = true;
+  el.querySelectorAll("button[data-privkey]").forEach(b =>
+    b.addEventListener("click", () => { alternarDone(b.dataset.privkey); renderPrivadoConteudo(dados); }));
+}
+let privadoDados = null;
+async function destrancarPrivado(senha){
+  const resp = await fetch("privado.enc.json?t=" + Date.now(), { cache: "no-store" });
+  if(!resp.ok) throw new Error("Arquivo privado nao encontrado.");
+  const e = await resp.json();
+  const key = await derivarChave(senha, b64bytes(e.salt), e.iter);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64bytes(e.iv) }, key, b64bytes(e.ct));
+  privadoDados = JSON.parse(new TextDecoder().decode(plain));
+  renderPrivadoConteudo(privadoDados);
+  try { sessionStorage.setItem("fu-priv", senha); } catch(_){}
+}
+function wirePrivado(){
+  const btn = document.getElementById("privadoUnlock");
+  const inp = document.getElementById("privadoSenha");
+  const err = document.getElementById("privadoErro");
+  async function tentar(senha){
+    err.textContent = "";
+    try { await destrancarPrivado(senha); }
+    catch(e){ err.textContent = "Senha incorreta."; try { sessionStorage.removeItem("fu-priv"); } catch(_){} }
+  }
+  btn.addEventListener("click", () => tentar(inp.value));
+  inp.addEventListener("keydown", ev => { if(ev.key === "Enter") tentar(inp.value); });
+  let salva = null;
+  try { salva = sessionStorage.getItem("fu-priv"); } catch(_){}
+  if(salva) tentar(salva); // reabre sozinho dentro da mesma sessao do navegador
+}
+
+// ---- secao e-mails ----------------------------------------------------
+function renderBars(containerId, items, fillClass){
+  const max = Math.max(...items.map(i => i.qtd), 1);
+  document.getElementById(containerId).innerHTML = items.map(i => `
+    <div class="bar-row">
+      <div class="name">${esc(i.nome)}</div>
+      <div class="bar-track"><div class="bar-fill ${fillClass}" style="width:${Math.round((i.qtd/max)*100)}%"></div></div>
+      <div class="count">${i.qtd}</div>
+    </div>
+  `).join("");
+}
+function renderMail(data){
+  if(!data.grupos) return;
+  const total = data.grupos.reduce((a,g) => a + g.qtd, 0);
+  const fixados = data.grupos.find(g => g.nome === "Fixado")?.qtd ?? 0;
+  const hojeOntem = (data.grupos.find(g => g.nome === "Hoje")?.qtd ?? 0) + (data.grupos.find(g => g.nome === "Ontem")?.qtd ?? 0);
+  const semCategoria = data.categorias.find(c => c.nome.toLowerCase().includes("sem categoria"))?.qtd ?? 0;
+  const kpis = [
+    { label: "Total visível", value: total },
+    { label: "Fixados", value: fixados },
+    { label: "Hoje + ontem", value: hojeOntem },
+    { label: "Sem categoria", value: semCategoria }
+  ];
+  document.getElementById("kpiRow").innerHTML = kpis.map(k =>
+    `<div class="kpi"><div class="label">${esc(k.label)}</div><div class="value">${k.value}</div></div>`
+  ).join("");
+  renderBars("grupoBars", data.grupos, "fill-blue");
+  renderBars("categoriaBars", data.categorias, "fill-teal");
+  document.getElementById("noteBox").innerHTML = data.nota ? "<b>Nota:</b> " + esc(data.nota) : "";
+}
+
+// ---- boot -------------------------------------------------------------
+const PANEL_IDS = { outlook: "mailSection", sei: "seiSection", pje: "pjeSection", esiest: "esiestSection", pessoal: "pessoalSection", solicitacoes: "solicSection", radar: "radarSection", privado: "privadoSection" };
+function panelKeyDe(nome){
+  const n = (nome || "").toLowerCase();
+  if(n.includes("privado")) return "privado";
+  if(n.includes("radar")) return "radar";
+  if(n.includes("solicita")) return "solicitacoes";
+  if(n.includes("pessoal")) return "pessoal";
+  if(n.includes("outlook")) return "outlook";
+  if(n.includes("sei")) return "sei";
+  if(n.includes("pje")) return "pje";
+  if(n.includes("esiest")) return "esiest";
+  return null;
+}
+let ultimoData = null;
+const DETALHES = [];
+function chaveDe(it){ return it.origem + "|" + it.ref; }
+const BADGE_LABEL = { Solicitacao: "Solicitação" };
+function rotuloOrigem(o){ return BADGE_LABEL[o] || o; }
+function doneLocais(){
+  try { return JSON.parse(localStorage.getItem("fu-done") || "{}"); } catch(e){ return {}; }
+}
+function alternarDone(key){
+  const m = doneLocais();
+  if(m[key]) delete m[key]; else m[key] = Date.now();
+  try { localStorage.setItem("fu-done", JSON.stringify(m)); } catch(e){}
+  if(ultimoData) render(ultimoData);
+}
+function abrirPopup(idx){
+  const det = DETALHES[idx];
+  if(!det) return;
+  document.getElementById("popupTitulo").textContent = det.titulo || "";
+  document.getElementById("popupCorpo").textContent = det.corpo || "";
+  document.getElementById("popup").showModal();
+}
+let panelAtivo = null;
+try { panelAtivo = localStorage.getItem("fu-panel"); } catch(e){}
+
+function aplicarPainel(disponiveis){
+  if(!disponiveis.includes(panelAtivo)) panelAtivo = disponiveis[0] || null;
+  for(const [key, id] of Object.entries(PANEL_IDS)){
+    document.getElementById(id).hidden = !(key === panelAtivo && disponiveis.includes(key));
+  }
+  document.querySelectorAll("#origemTabs .origem-tab").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.panel === panelAtivo);
+  });
+}
+function selecionarPainel(key, disponiveis){
+  panelAtivo = key;
+  try { localStorage.setItem("fu-panel", key); } catch(e){}
+  aplicarPainel(disponiveis);
+}
+
+function render(data){
+  ultimoData = data;
+  DETALHES.length = 0;
+  document.getElementById("updatedAt").textContent = "Atualizado em " + (data.atualizadoEm || "?");
+  renderLembretes(data);
+  const origens = data.origens || [];
+  document.getElementById("origemTabs").innerHTML = origens.map(o => {
+    const key = panelKeyDe(o.nome);
+    return `<button type="button" class="origem-tab" data-panel="${key ?? ""}">${esc(o.nome)}: ${esc(o.status)}</button>`;
+  }).join("");
+  atualizarBarraTrabalho(data);
+  const fila = montarFila(data);
+  renderFila(data, fila);
+  const disponiveis = origens.map(o => panelKeyDe(o.nome)).filter(Boolean);
+  if(!disponiveis.includes("privado")) disponiveis.push("privado");
+  renderSei(data, fila);
+  renderPje(data, fila);
+  renderEsiest(data, fila);
+  renderPessoal(data, fila);
+  renderSolic(data, fila);
+  renderRadar(data);
+  renderMail(data);
+  document.querySelectorAll("#origemTabs .origem-tab").forEach(btn => {
+    const key = btn.dataset.panel;
+    if(key && disponiveis.includes(key)) btn.addEventListener("click", () => selecionarPainel(key, disponiveis));
+  });
+  document.querySelectorAll("button[data-det]").forEach(b =>
+    b.addEventListener("click", () => abrirPopup(+b.dataset.det)));
+  document.querySelectorAll(".q-done").forEach(b =>
+    b.addEventListener("click", () => alternarDone(b.dataset.key)));
+  aplicarPainel(disponiveis);
+}
+document.getElementById("copiarConclusoes").addEventListener("click", async () => {
+  const fila = ultimoData ? montarFila(ultimoData) : null;
+  const done = fila?.doneLocal || [];
+  if(!done.length) return;
+  const txt = "Concluí as seguintes tarefas, favor registrar definitivamente:\n" +
+    done.map(it => "- [" + it.origem + "] " + it.ref + (it.titulo ? " (" + it.titulo.slice(0,80) + ")" : "")).join("\n");
+  try {
+    await navigator.clipboard.writeText(txt);
+    const b = document.getElementById("copiarConclusoes");
+    const orig = b.textContent;
+    b.textContent = "Copiado! Cole na conversa com o Claude.";
+    setTimeout(() => b.textContent = orig, 2500);
+  } catch(e){}
+});
+document.getElementById("popupFechar").addEventListener("click", () => document.getElementById("popup").close());
+document.getElementById("popupCopiar").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(document.getElementById("popupCorpo").textContent);
+    document.getElementById("popupCopiar").textContent = "Copiado!";
+    setTimeout(() => document.getElementById("popupCopiar").textContent = "Copiar texto", 1500);
+  } catch(e){}
+});
+// ---- detalhe de trabalho (cifrado; senha da equipe) -------------------
+let dataPub = null, dataTrabalho = null;
+function mesclar(pub){
+  const full = JSON.parse(JSON.stringify(pub || {}));
+  if(dataTrabalho){
+    full.nota = dataTrabalho.notaOutlook;
+    full.tarefas = dataTrabalho.tarefas;
+    full.sei = Object.assign({}, pub.sei || {}, { nota: dataTrabalho.seiNota, processos: dataTrabalho.seiProcessos });
+    full.esiest = Object.assign({}, pub.esiest || {}, { nota: dataTrabalho.esiestNota, processos: dataTrabalho.esiestProcessos });
+    full.radar = dataTrabalho.radar;
+    full.solicitacoes = dataTrabalho.solicitacoes;
+    full.lembretes = dataTrabalho.lembretes;
+    full.pessoal = dataTrabalho.pessoal;
+    full.destravado = true;
+  }
+  return full;
+}
+async function destrancarTrabalho(senha){
+  const resp = await fetch("work.enc.json?t=" + Date.now(), { cache: "no-store" });
+  if(!resp.ok) throw new Error("Detalhe de trabalho nao encontrado.");
+  const e = await resp.json();
+  const key = await derivarChave(senha, b64bytes(e.salt), e.iter);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64bytes(e.iv) }, key, b64bytes(e.ct));
+  dataTrabalho = JSON.parse(new TextDecoder().decode(plain));
+  try { sessionStorage.setItem("fu-team", senha); } catch(_){}
+}
+function atualizarBarraTrabalho(data){
+  const bar = document.getElementById("trabalhoBar");
+  if(!bar) return;
+  bar.hidden = !!data.destravado;
+}
+function wireTrabalho(){
+  const btn = document.getElementById("teamUnlock");
+  const inp = document.getElementById("teamSenha");
+  const err = document.getElementById("teamErro");
+  async function tentar(senha){
+    err.textContent = "";
+    try { await destrancarTrabalho(senha); render(mesclar(dataPub)); }
+    catch(e){ err.textContent = "Senha incorreta."; try { sessionStorage.removeItem("fu-team"); } catch(_){} }
+  }
+  btn.addEventListener("click", () => tentar(inp.value));
+  inp.addEventListener("keydown", ev => { if(ev.key === "Enter") tentar(inp.value); });
+}
+
+async function carregar(){
+  try {
+    const resp = await fetch("data.public.json?t=" + Date.now(), { cache: "no-store" });
+    if(!resp.ok) throw new Error("HTTP " + resp.status);
+    dataPub = await resp.json();
+  } catch (e) {
+    dataPub = (typeof FALLBACK !== "undefined" && FALLBACK) ? FALLBACK : { origens: [] };
+  }
+  let saved = null;
+  try { saved = sessionStorage.getItem("fu-team"); } catch(_){}
+  if(saved && !dataTrabalho){
+    try { await destrancarTrabalho(saved); }
+    catch(_){ try { sessionStorage.removeItem("fu-team"); } catch(__){} }
+  }
+  render(mesclar(dataPub));
+}
+wirePrivado();
+wireTrabalho();
+carregar();
+setInterval(carregar, REFRESH_MS);
+</script>
