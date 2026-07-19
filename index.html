@@ -99,6 +99,30 @@
   .lock-inline{background:var(--card);border:1px dashed var(--line);border-radius:10px;
     padding:1.1rem 1.2rem;color:var(--ink-soft);font-size:.88rem}
 
+  /* bloco de triagem - contador para mexer na caixa de e-mails sem paralisia */
+  .triagem-box{
+    display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between;
+    background:var(--card);border:2px solid var(--line);border-radius:10px;
+    padding:.7rem 1rem;font-size:.85rem;margin:.2rem 0 1rem;transition:border-color .3s,background .3s;
+  }
+  .triagem-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .triagem-titulo{font-weight:700}
+  .triagem-sub{font-size:.76rem;color:var(--ink-faint)}
+  .triagem-controles{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .triagem-tempo{font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink-soft);min-width:4ch;text-align:center}
+  .triagem-box button{
+    font:inherit;font-size:.8rem;padding:5px 12px;border-radius:8px;cursor:pointer;
+    background:var(--card);border:1px solid var(--line);color:var(--ink-soft);
+  }
+  .triagem-box button:hover{border-color:var(--blue);color:var(--blue)}
+  .triagem-box.rodando{border-color:var(--teal)}
+  .triagem-box.rodando .triagem-tempo{color:var(--teal)}
+  .triagem-box.alerta{border-color:var(--amber);background:var(--amber-soft)}
+  .triagem-box.alerta .triagem-tempo{color:var(--amber)}
+  .triagem-box.acabou{border-color:var(--red);background:var(--red-soft)}
+  .triagem-box.acabou .triagem-tempo{color:var(--red)}
+  .triagem-msg{width:100%;margin:0;font-weight:700;color:var(--red)}
+
   .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:1.4rem}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.85rem 1rem}
   .kpi .label{font-size:.75rem;color:var(--ink-soft);margin-bottom:.25rem}
@@ -300,6 +324,21 @@
   </span>
 </div>
 <p class="panel-hint">Clique em uma origem acima para abrir o painel correspondente ao lado da fila.</p>
+
+<div class="triagem-box" id="triagemBox">
+  <div class="triagem-info">
+    <span class="triagem-titulo">Bloco de triagem da caixa institucional</span>
+    <span class="triagem-sub">So decida: acao ou arquivar. Resolver e depois, pela fila.</span>
+  </div>
+  <div class="triagem-controles">
+    <button type="button" data-min="15">15 min</button>
+    <button type="button" data-min="20">20 min</button>
+    <button type="button" data-min="30">30 min</button>
+    <span class="triagem-tempo" id="triagemTempo">20:00</span>
+    <button type="button" id="triagemParar" hidden>Parar</button>
+  </div>
+  <p class="triagem-msg" id="triagemMsg" hidden>Pare agora - o resto espera. Volte pra fila.</p>
+</div>
 
 <div class="layout">
 <div class="col-fila">
@@ -1230,4 +1269,71 @@ wirePrivado();
 wireTrabalho();
 carregar();
 setInterval(carregar, REFRESH_MS);
+
+// ---- bloco de triagem: contador visual para mexer na caixa sem paralisia ----
+let triagemFimEm = null, triagemDuracaoMin = 20, triagemInterval = null;
+function triagemFmt(segundos){
+  const s = Math.max(0, Math.round(segundos));
+  return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+}
+function triagemAtualizar(){
+  const box = document.getElementById("triagemBox");
+  const el = document.getElementById("triagemTempo");
+  const msg = document.getElementById("triagemMsg");
+  if(!triagemFimEm){
+    el.textContent = "20:00";
+    box.className = "triagem-box";
+    msg.hidden = true;
+    document.title = "Fila Unica";
+    return;
+  }
+  const restanteSeg = (triagemFimEm - Date.now()) / 1000;
+  const totalSeg = triagemDuracaoMin * 60;
+  el.textContent = triagemFmt(restanteSeg);
+  if(restanteSeg <= 0){
+    box.className = "triagem-box acabou";
+    msg.hidden = false;
+    document.title = "TEMPO ACABOU - Fila Unica";
+  } else {
+    box.className = "triagem-box rodando" + (restanteSeg <= totalSeg * 0.2 ? " alerta" : "");
+    msg.hidden = true;
+    document.title = triagemFmt(restanteSeg) + " - Fila Unica";
+  }
+}
+function triagemIniciar(min){
+  triagemDuracaoMin = min;
+  triagemFimEm = Date.now() + min * 60000;
+  try { localStorage.setItem("fu-triagem-fim", String(triagemFimEm)); localStorage.setItem("fu-triagem-dur", String(min)); } catch(e){}
+  document.getElementById("triagemParar").hidden = false;
+  if(triagemInterval) clearInterval(triagemInterval);
+  triagemInterval = setInterval(triagemAtualizar, 1000);
+  triagemAtualizar();
+}
+function triagemParar(){
+  triagemFimEm = null;
+  if(triagemInterval) clearInterval(triagemInterval);
+  triagemInterval = null;
+  try { localStorage.removeItem("fu-triagem-fim"); localStorage.removeItem("fu-triagem-dur"); } catch(e){}
+  document.getElementById("triagemParar").hidden = true;
+  triagemAtualizar();
+}
+(function triagemRestaurar(){
+  let fim = null, dur = 20;
+  try {
+    const f = localStorage.getItem("fu-triagem-fim"), d = localStorage.getItem("fu-triagem-dur");
+    if(f) fim = +f;
+    if(d) dur = +d;
+  } catch(e){}
+  // so restaura se ainda estiver rodando ou tiver acabado ha menos de 1h (senao ignora timer velho)
+  if(fim && fim > Date.now() - 3600000){
+    triagemFimEm = fim;
+    triagemDuracaoMin = dur;
+    document.getElementById("triagemParar").hidden = false;
+    triagemInterval = setInterval(triagemAtualizar, 1000);
+  }
+  triagemAtualizar();
+})();
+document.querySelectorAll(".triagem-controles button[data-min]").forEach(b =>
+  b.addEventListener("click", () => triagemIniciar(+b.dataset.min)));
+document.getElementById("triagemParar").addEventListener("click", triagemParar);
 </script>
