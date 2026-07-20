@@ -596,6 +596,12 @@ function pjeEtiquetasConsolidadas(pj){
   });
   return [...mapa.entries()].map(([nome, qtd]) => ({ nome, qtd })).sort((a, b) => b.qtd - a.qtd);
 }
+// certidoes a expedir = prioridade do Diretor; penhora a anotar = urgente (ver nota do PJe)
+function pjePrioridadeDe(nomeEtiqueta){
+  if(nomeEtiqueta.includes("PENHORA")) return "urgente";
+  if(nomeEtiqueta.includes("CERTIDAO")) return "alta";
+  return null;
+}
 function montarFila(data){
   const itens = [];
   (data.sei?.processos || []).forEach((p, i) => {
@@ -650,7 +656,7 @@ function montarFila(data){
   pjeEtiquetasConsolidadas(data.pje).forEach((et, i) => {
     itens.push({
       origem: "PJe", ref: et.nome, titulo: et.qtd + " processo(s) no PJe com esta etiqueta",
-      prazo: null, tarefa: "Resolver", flags: [], prioridade: null,
+      prazo: null, tarefa: "Resolver", flags: [], prioridade: pjePrioridadeDe(et.nome),
       status: "aberto", ordem: 5000 + i, detalhe: null
     });
   });
@@ -815,10 +821,13 @@ function renderPje(data, fila){
     const key = "PJe|" + et.nome;
     const fp = pos.get(key);
     const feito = !!donePje[key];
+    const prioridade = pjePrioridadeDe(et.nome);
+    const [chipCls, chipTxt] = chipDe({ prazo: null, prioridade }, classificar({ prazo: null, prioridade }));
     const check = `<button type="button" class="q-done" data-key="${esc(key)}" title="${feito ? "Reabrir" : "Marcar como concluida (local; avise o Claude para registrar)"}">${feito ? "&#8634;" : "&#10003;"}</button>`;
-    return `<div class="q-row" style="grid-template-columns:34px 1fr auto${feito ? ";opacity:.55" : ""}">
+    return `<div class="q-row" style="grid-template-columns:34px 1fr auto auto${feito ? ";opacity:.55" : ""}">
       <div class="q-pos">${fp ?? "-"}</div>
       <div class="q-main"><div class="q-ref"${feito ? ' style="text-decoration:line-through"' : ""}>${esc(et.nome)}</div><div class="q-desc">${et.qtd} processo(s)</div></div>
+      <span class="chip ${chipCls}">${chipTxt}</span>
       <div class="q-actions">${check}</div>
     </div>`;
   }).join("");
