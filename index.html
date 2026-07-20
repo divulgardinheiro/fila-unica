@@ -390,8 +390,6 @@
   <h2>PJe - minhas tarefas <span class="count" id="pjeCapturado"></span></h2>
   <h3>Por etiqueta (o que entra na fila)</h3>
   <div class="queue" id="pjeEtiquetasList" style="margin-bottom:1.2rem"></div>
-  <h3>Por grupo (visao do PJe)</h3>
-  <div class="bars" id="pjeBars"></div>
   <h3 id="pjeGeralTitulo" hidden>Visao geral da vara - por tipo de tarefa</h3>
   <div id="pjeDonutWrap" class="donut-wrap" hidden>
     <div id="pjeDonut"></div>
@@ -824,9 +822,6 @@ function renderPje(data, fila){
       <div class="q-actions">${check}</div>
     </div>`;
   }).join("");
-  const items = (pj.minhasTarefas || [])
-    .map(t => ({ nome: t.tarefa + (t.etiquetas?.length ? " [" + t.etiquetas.join(", ") + "]" : ""), qtd: t.qtd }));
-  renderBars("pjeBars", items, "fill-blue");
   renderPjeDonut(pj);
   document.getElementById("pjeNote").innerHTML = pj.nota ? "<b>Nota:</b> " + esc(pj.nota) : "";
 }
