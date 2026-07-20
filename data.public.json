@@ -1,5 +1,5 @@
 {
-  "atualizadoEm": "16/07/2026",
+  "atualizadoEm": "20/07/2026",
   "origens": [
     {
       "nome": "Outlook (Caixa de Entrada)",
@@ -68,11 +68,11 @@
   ],
   "filaPolitica": "0) Prioridade zero - ordem direta do Diretor ou dos juizes; 1) urgente/emergencia (urgencias apontadas, agendamentos, penhoras, prazo ate 2 dias ou vencido); 2) QUALQUER item com prazo definido, ordenado pela proximidade da data (o mais perto primeiro) - data definida sempre fura na frente de rotulo sem data; 3) alta prioridade sem prazo definido; 4) triagem dos SEI nao analisados; 5) sem prazo; 6) baixa prioridade; 7) aguardando terceiros.",
   "sei": {
-    "capturadoEm": "15/07/2026 11:35",
+    "capturadoEm": "20/07/2026 01:53",
     "resumo": {
-      "total": 72,
-      "recebidos": 57,
-      "gerados": 15,
+      "total": 76,
+      "recebidos": 60,
+      "gerados": 16,
       "naoVisualizados": 9,
       "alterados": 16,
       "atribuidosAMim": 5,
