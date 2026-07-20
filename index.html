@@ -369,7 +369,7 @@
   <div class="table-wrap">
     <table class="sei">
       <thead>
-        <tr><th># fila</th><th>Processo</th><th>Sinais</th><th>Situação</th><th>Do que se trata / prazo</th></tr>
+        <tr><th># fila</th><th>Processo</th><th>Sinais</th><th>Situação</th><th>Do que se trata / prazo</th><th>Feito</th></tr>
       </thead>
       <tbody id="seiBody"></tbody>
     </table>
@@ -388,6 +388,9 @@
 
 <section id="pjeSection" hidden>
   <h2>PJe - minhas tarefas <span class="count" id="pjeCapturado"></span></h2>
+  <h3>Por etiqueta (o que entra na fila)</h3>
+  <div class="queue" id="pjeEtiquetasList" style="margin-bottom:1.2rem"></div>
+  <h3>Por grupo (visao do PJe)</h3>
   <div class="bars" id="pjeBars"></div>
   <h3 id="pjeGeralTitulo" hidden>Visao geral da vara - por tipo de tarefa</h3>
   <div id="pjeDonutWrap" class="donut-wrap" hidden>
@@ -401,7 +404,7 @@
   <h2>eSiest - processos parados <span class="count" id="esiestPeriodo"></span></h2>
   <div class="table-wrap">
     <table class="sei">
-      <thead><tr><th># fila</th><th>Processo</th><th>Dias parado</th><th>Onde está</th><th>Observação</th></tr></thead>
+      <thead><tr><th># fila</th><th>Processo</th><th>Dias parado</th><th>Onde está</th><th>Observação</th><th>Feito</th></tr></thead>
       <tbody id="esiestBody"></tbody>
     </table>
   </div>
@@ -412,7 +415,7 @@
   <h2>Solicitações supervenientes <span class="count" id="solicCount"></span></h2>
   <div class="table-wrap">
     <table class="sei">
-      <thead><tr><th># fila</th><th>Pedido</th><th>Checklist</th><th>Próximo passo</th></tr></thead>
+      <thead><tr><th># fila</th><th>Pedido</th><th>Checklist</th><th>Próximo passo</th><th>Feito</th></tr></thead>
       <tbody id="solicBody"></tbody>
     </table>
   </div>
@@ -424,7 +427,7 @@
   <div class="kpis" id="pessoalKpis"></div>
   <div class="table-wrap">
     <table class="sei">
-      <thead><tr><th># fila</th><th>Item</th><th>O que fazer</th><th>Prioridade</th></tr></thead>
+      <thead><tr><th># fila</th><th>Item</th><th>O que fazer</th><th>Prioridade</th><th>Feito</th></tr></thead>
       <tbody id="pessoalBody"></tbody>
     </table>
   </div>
@@ -586,6 +589,15 @@ function chipDe(item, cls){
   if(cls.rank === 5) return ["chip-neutra", "Baixa"];
   return ["chip-neutra", "Sem prazo"];
 }
+// consolida as etiquetas (coloridas no PJe) de todos os grupos de "minhas tarefas" num so mapa,
+// somando a quantidade de processos de cada grupo que carrega aquela etiqueta
+function pjeEtiquetasConsolidadas(pj){
+  const mapa = new Map();
+  (pj?.minhasTarefas || []).forEach(t => {
+    (t.etiquetas || []).forEach(et => mapa.set(et, (mapa.get(et) || 0) + (t.qtd || 0)));
+  });
+  return [...mapa.entries()].map(([nome, qtd]) => ({ nome, qtd })).sort((a, b) => b.qtd - a.qtd);
+}
 function montarFila(data){
   const itens = [];
   (data.sei?.processos || []).forEach((p, i) => {
@@ -613,6 +625,35 @@ function montarFila(data){
       origem: "Radar", ref: r.ref, titulo: r.resumoFila || r.alvo || "",
       prazo: r.prazo || null, tarefa: "Resolver", flags: [],
       prioridade: r.prioridade || null, status: "aberto", ordem: 2000 + i, detalhe: null
+    });
+  });
+  // solicitacoes supervenientes - so entra aqui se ainda nao existir uma tarefa manual com a mesma ref,
+  // pra garantir que TODA solicitacao espelha na fila, mesmo se eu esquecer de duplicar a tarefa
+  (data.solicitacoes?.itens || []).forEach((s, i) => {
+    if(itens.some(it => it.origem === "Solicitacao" && it.ref === s.ref)) return;
+    itens.push({
+      origem: "Solicitacao", ref: s.ref, titulo: s.pedido || "",
+      prazo: s.prazo || null, tarefa: "Resolver", flags: [],
+      prioridade: s.prioridade || null, status: "aberto", ordem: 3000 + i, detalhe: null
+    });
+  });
+  // eSiest - processos parados tambem viram item de fila (sem prazo: e tempo parado, nao prazo futuro)
+  (data.esiest?.processos || []).forEach((p, i) => {
+    if(p.status === "concluido") return;
+    itens.push({
+      origem: "eSiest", ref: p.numero,
+      titulo: (p.obs || p.classe || "") + " - parado ha " + p.dias + " dias",
+      prazo: null, tarefa: "Resolver", flags: [],
+      prioridade: p.prioridadeLegal ? "alta" : null,
+      status: p.status || "aberto", ordem: 4000 + i, detalhe: null
+    });
+  });
+  // PJe - uma etiqueta consolidada = um item de fila
+  pjeEtiquetasConsolidadas(data.pje).forEach((et, i) => {
+    itens.push({
+      origem: "PJe", ref: et.nome, titulo: et.qtd + " processo(s) no PJe com esta etiqueta",
+      prazo: null, tarefa: "Resolver", flags: [], prioridade: null,
+      status: "aberto", ordem: 5000 + i, detalhe: null
     });
   });
   const done = doneLocais();
@@ -714,7 +755,7 @@ function renderSei(data, fila){
     { label: "Controles de prazo", value: rr.controlesDePrazo ?? "-" }
   ].map(k => `<div class="kpi"><div class="label">${esc(k.label)}</div><div class="value">${esc(k.value)}</div></div>`).join("");
   if(!data.destravado || !sei.processos){
-    document.getElementById("seiBody").innerHTML = '<tr><td colspan="5">' + LOCK_HTML + '</td></tr>';
+    document.getElementById("seiBody").innerHTML = '<tr><td colspan="6">' + LOCK_HTML + '</td></tr>';
     document.getElementById("seiNote").innerHTML = "";
     return;
   }
@@ -734,6 +775,7 @@ function renderSei(data, fila){
   document.getElementById("seiKpis").innerHTML = kpis.map(k =>
     `<div class="kpi"><div class="label">${esc(k.label)}</div><div class="value">${esc(k.value)}</div></div>`
   ).join("");
+  const doneSei = doneLocais();
   document.getElementById("seiBody").innerHTML = procs.map(p => {
     const dots = (p.flags || []).map(f => `<i class="dot dot-${esc(f)}" title="${esc(FLAG_LABEL[f] || f)}"></i>`).join(" ");
     const st = p.status === "analisado"
@@ -754,7 +796,11 @@ function renderSei(data, fila){
       info += `<div style="margin-top:.3rem"><button type="button" class="link-det" data-det="${idx}">Abrir minuta do expediente &#8599;</button></div>`;
     }
     const fp = pos.get("SEI|" + p.numero);
-    return `<tr><td class="q-pos">${fp ?? "-"}</td><td class="num">${esc(p.numero)}</td><td>${dots}</td><td>${st}</td><td>${info}</td></tr>`;
+    const key = "SEI|" + p.numero;
+    const feito = !!doneSei[key];
+    const check = p.status === "concluido" ? "" :
+      `<button type="button" class="q-done" data-key="${esc(key)}" title="${feito ? "Reabrir" : "Marcar como concluida (local; avise o Claude para registrar)"}">${feito ? "&#8634;" : "&#10003;"}</button>`;
+    return `<tr${feito ? ' style="opacity:.55"' : ""}><td class="q-pos">${fp ?? "-"}</td><td class="num"${feito ? ' style="text-decoration:line-through"' : ""}>${esc(p.numero)}</td><td>${dots}</td><td>${st}</td><td>${info}</td><td>${check}</td></tr>`;
   }).join("");
   document.getElementById("seiNote").innerHTML = sei.nota ? "<b>Nota:</b> " + esc(sei.nota) : "";
 }
@@ -765,14 +811,21 @@ function renderPje(data, fila){
   const pj = data.pje;
   const pos = mapaPosicoes(fila);
   document.getElementById("pjeCapturado").textContent = "(captura de " + (pj.capturadoEm || "?") + (pj.totalVara ? " - vara inteira: " + pj.totalVara + " tarefas" : "") + ")";
+  const donePje = doneLocais();
+  const etiquetas = pjeEtiquetasConsolidadas(pj);
+  document.getElementById("pjeEtiquetasList").innerHTML = etiquetas.map(et => {
+    const key = "PJe|" + et.nome;
+    const fp = pos.get(key);
+    const feito = !!donePje[key];
+    const check = `<button type="button" class="q-done" data-key="${esc(key)}" title="${feito ? "Reabrir" : "Marcar como concluida (local; avise o Claude para registrar)"}">${feito ? "&#8634;" : "&#10003;"}</button>`;
+    return `<div class="q-row" style="grid-template-columns:34px 1fr auto${feito ? ";opacity:.55" : ""}">
+      <div class="q-pos">${fp ?? "-"}</div>
+      <div class="q-main"><div class="q-ref"${feito ? ' style="text-decoration:line-through"' : ""}>${esc(et.nome)}</div><div class="q-desc">${et.qtd} processo(s)</div></div>
+      <div class="q-actions">${check}</div>
+    </div>`;
+  }).join("");
   const items = (pj.minhasTarefas || [])
-    .map(t => {
-      const fp = t.filaRef ? pos.get("PJe|" + t.filaRef) : null;
-      return { fp: fp ?? 9999,
-        nome: (fp ? "#" + fp + " - " : "") + t.tarefa + (t.etiquetas?.length ? " [" + t.etiquetas.join(", ") + "]" : ""),
-        qtd: t.qtd };
-    })
-    .sort((a, b) => a.fp - b.fp);
+    .map(t => ({ nome: t.tarefa + (t.etiquetas?.length ? " [" + t.etiquetas.join(", ") + "]" : ""), qtd: t.qtd }));
   renderBars("pjeBars", items, "fill-blue");
   renderPjeDonut(pj);
   document.getElementById("pjeNote").innerHTML = pj.nota ? "<b>Nota:</b> " + esc(pj.nota) : "";
@@ -817,20 +870,25 @@ function renderEsiest(data, fila){
   const pos = mapaPosicoes(fila);
   document.getElementById("esiestPeriodo").textContent = "(mais de " + (es.limiarDias ?? 60) + " dias - boletim " + (es.periodo || "?") + ")";
   if(!data.destravado || !es.processos){
-    document.getElementById("esiestBody").innerHTML = '<tr><td colspan="5">' + LOCK_HTML + '</td></tr>';
+    document.getElementById("esiestBody").innerHTML = '<tr><td colspan="6">' + LOCK_HTML + '</td></tr>';
     document.getElementById("esiestNote").innerHTML = "";
     return;
   }
   const eprocs = [...(es.processos || [])].sort((a, b) =>
     (pos.get("eSiest|" + a.numero) ?? 9999) - (pos.get("eSiest|" + b.numero) ?? 9999));
+  const doneEsiest = doneLocais();
   document.getElementById("esiestBody").innerHTML = eprocs.map(pr => {
     const chip = pr.prioridadeLegal ? ' <span class="chip chip-alta">prioridade legal</span>' : "";
     const etq = pr.etiquetas?.length ? '<div class="analise-det">' + esc(pr.etiquetas.join(", ")) + "</div>" : "";
     const fp = pos.get("eSiest|" + pr.numero);
-    return `<tr><td class="q-pos">${fp ?? "-"}</td><td class="num">${esc(pr.numero)}<div class="analise-det">${esc(pr.classe || "")}</div></td>
+    const key = "eSiest|" + pr.numero;
+    const feito = !!doneEsiest[key];
+    const check = `<button type="button" class="q-done" data-key="${esc(key)}" title="${feito ? "Reabrir" : "Marcar como concluida (local; avise o Claude para registrar)"}">${feito ? "&#8634;" : "&#10003;"}</button>`;
+    return `<tr${feito ? ' style="opacity:.55"' : ""}><td class="q-pos">${fp ?? "-"}</td><td class="num"${feito ? ' style="text-decoration:line-through"' : ""}>${esc(pr.numero)}<div class="analise-det">${esc(pr.classe || "")}</div></td>
       <td><b>${pr.dias}</b></td>
       <td>${esc(pr.localizacao || "")}${chip}</td>
-      <td>${esc(pr.obs || "")}${etq}</td></tr>`;
+      <td>${esc(pr.obs || "")}${etq}</td>
+      <td>${check}</td></tr>`;
   }).join("");
   document.getElementById("esiestNote").innerHTML = es.nota ? "<b>Nota:</b> " + esc(es.nota) : "";
 }
@@ -839,7 +897,7 @@ function renderEsiest(data, fila){
 function renderSolic(data, fila){
   if(!data.destravado || !data.solicitacoes){
     const sc = document.getElementById("solicCount"); if(sc) sc.textContent = "";
-    document.getElementById("solicBody").innerHTML = '<tr><td colspan="4">' + LOCK_HTML + '</td></tr>';
+    document.getElementById("solicBody").innerHTML = '<tr><td colspan="5">' + LOCK_HTML + '</td></tr>';
     document.getElementById("solicNote").innerHTML = "";
     return;
   }
@@ -847,16 +905,21 @@ function renderSolic(data, fila){
   const pos = mapaPosicoes(fila);
   const itens = so.itens || [];
   document.getElementById("solicCount").textContent = "(" + itens.length + " em andamento)";
+  const doneSolic = doneLocais();
   document.getElementById("solicBody").innerHTML = itens.map(s => {
     const fp = pos.get("Solicitacao|" + s.ref);
     const cl = (s.checklist || []).map(c =>
       `<div>${c.feito ? '<span class="check-ok">&#10003;</span>' : '<span class="check-no">&#9675;</span>'} ${esc(c.passo)}${c.obs ? ' <span class="analise-det" style="display:inline">(' + esc(c.obs) + ')</span>' : ''}</div>`
     ).join("");
     const feitos = (s.checklist || []).filter(c => c.feito).length;
-    return `<tr><td class="q-pos">${fp ?? "-"}</td>
-      <td class="num" style="white-space:normal"><b>${esc(s.ref)}</b><div class="analise-det">${esc(s.pedido)}<br>Solicitante: ${esc(s.solicitante || "")} &middot; desde ${esc(s.desde || "?")}</div></td>
+    const key = "Solicitacao|" + s.ref;
+    const feito = !!doneSolic[key];
+    const check = `<button type="button" class="q-done" data-key="${esc(key)}" title="${feito ? "Reabrir" : "Marcar solicitacao inteira como concluida (local; avise o Claude para registrar)"}">${feito ? "&#8634;" : "&#10003;"}</button>`;
+    return `<tr${feito ? ' style="opacity:.55"' : ""}><td class="q-pos">${fp ?? "-"}</td>
+      <td class="num" style="white-space:normal${feito ? ";text-decoration:line-through" : ""}"><b>${esc(s.ref)}</b><div class="analise-det">${esc(s.pedido)}<br>Solicitante: ${esc(s.solicitante || "")} &middot; desde ${esc(s.desde || "?")}</div></td>
       <td>${cl}<div class="analise-det">${feitos}/${(s.checklist || []).length} concluidos</div></td>
-      <td>${esc(s.proximo || "")}</td></tr>`;
+      <td>${esc(s.proximo || "")}</td>
+      <td>${check}</td></tr>`;
   }).join("");
   document.getElementById("solicNote").innerHTML = so.nota ? "<b>Nota:</b> " + esc(so.nota) : "";
 }
@@ -866,7 +929,7 @@ function renderPessoal(data, fila){
   if(!data.destravado || !data.pessoal){
     const pc = document.getElementById("pessoalCapturado"); if(pc) pc.textContent = "";
     document.getElementById("pessoalKpis").innerHTML = "";
-    document.getElementById("pessoalBody").innerHTML = '<tr><td colspan="4">' + LOCK_HTML + '</td></tr>';
+    document.getElementById("pessoalBody").innerHTML = '<tr><td colspan="5">' + LOCK_HTML + '</td></tr>';
     document.getElementById("pessoalNote").innerHTML = "";
     return;
   }
@@ -886,7 +949,9 @@ function renderPessoal(data, fila){
   const itens = fila.map((it, i) => ({ it, pos: i + 1 })).filter(x => x.it.origem === "Pessoal");
   document.getElementById("pessoalBody").innerHTML = itens.map(x => {
     const [cCls, cTxt] = chipDe(x.it, x.it.cls);
-    return `<tr><td class="q-pos">${x.pos}</td><td class="num">${esc(x.it.ref)}</td><td>${esc(x.it.titulo || "")}</td><td><span class="chip ${cCls}">${cTxt}</span></td></tr>`;
+    const key = chaveDe(x.it);
+    const check = `<button type="button" class="q-done" data-key="${esc(key)}" title="Marcar como concluida (local; avise o Claude para registrar)">&#10003;</button>`;
+    return `<tr><td class="q-pos">${x.pos}</td><td class="num">${esc(x.it.ref)}</td><td>${esc(x.it.titulo || "")}</td><td><span class="chip ${cCls}">${cTxt}</span></td><td>${check}</td></tr>`;
   }).join("");
   document.getElementById("pessoalNote").innerHTML = ps.nota ? "<b>Nota:</b> " + esc(ps.nota) : "";
 }
