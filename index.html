@@ -631,10 +631,10 @@ function montarFila(data){
       prioridade: r.prioridade || null, status: "aberto", ordem: 2000 + i, detalhe: null
     });
   });
-  // solicitacoes supervenientes - so entra aqui se ainda nao existir uma tarefa manual com a mesma ref,
-  // pra garantir que TODA solicitacao espelha na fila, mesmo se eu esquecer de duplicar a tarefa
+  // solicitacoes supervenientes - so entra aqui se ainda nao existir NENHUMA tarefa com a mesma ref
+  // (mesmo concluida - se a tarefa ja foi resolvida/registrada, ela e' quem manda, nao duplicar aqui)
   (data.solicitacoes?.itens || []).forEach((s, i) => {
-    if(itens.some(it => it.origem === "Solicitacao" && it.ref === s.ref)) return;
+    if((data.tarefas || []).some(t => t.origem === "Solicitacao" && t.ref === s.ref)) return;
     itens.push({
       origem: "Solicitacao", ref: s.ref, titulo: s.pedido || "",
       prazo: s.prazo || null, tarefa: "Resolver", flags: [],
